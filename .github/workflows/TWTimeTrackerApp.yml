@@ -1,15 +1,15 @@
-name: .NET Core-Anwendung für Funktions-App TimeTracker20230716000501 erstellen und bereitstellen
+name: .NET Core-Anwendung für Funktions-App TWTimeTrackerApp erstellen und bereitstellen
 on:
   push:
     branches:
     - main
 env:
-  AZURE_FUNCTIONAPP_NAME: TimeTracker20230716000501
+  AZURE_FUNCTIONAPP_NAME: TWTimeTrackerApp
   AZURE_FUNCTIONAPP_PACKAGE_PATH: TimeTracker/published
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 7.0.x
   WORKING_DIRECTORY: TimeTracker
-  DOTNET_CORE_VERSION_INPROC: 7.0.x
+  DOTNET_CORE_VERSION_INPROC: 6.0.x
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,12 +23,12 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_CORE_VERSION_INPROC }}
-    - name: Restore      
-      run: dotnet restore
+    - name: Restore
+      run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
     - name: Build
-      run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
+      run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
     - name: Publish
-      run: dotnet publish --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
+      run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
     - name: Publish Artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -47,5 +47,5 @@ jobs:
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        publish-profile: ${{ secrets.TimeTracker20230716000501_07A7 }}
+        publish-profile: ${{ secrets.TWTimeTrackerApp_4199 }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
