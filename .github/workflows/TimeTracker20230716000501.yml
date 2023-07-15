@@ -24,6 +24,8 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_CORE_VERSION_INPROC }}
     - name: Restore
+      run: pwd
+      run: ls -lA
       run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
     - name: Build
       run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
