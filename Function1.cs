@@ -14,16 +14,13 @@ namespace TimeTracker
             _logger = loggerFactory.CreateLogger<Function1>();
         }
 
-        [Function("Function1")]
+        [Function("health")]
         public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "health")] HttpRequestData req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
-
             var response = req.CreateResponse(HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
-
-            response.WriteString("Welcome to Azure Functions!");
-
+            response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+            response.WriteString("{\"application\": \"TimeTracker\", \"status\": \"healthy\"}");
             return response;
         }
     }
