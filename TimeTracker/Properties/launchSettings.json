@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "TimeTracker": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7010"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "httpPort": 30575,
+      "useSSL": false
+    }
+  }
+}
