@@ -5,8 +5,13 @@ VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeTracker", "TimeTracker\TimeTracker.csproj", "{FBD2119D-A204-45D4-83A0-4EE385898CCF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{44ED0F44-6A33-4E13-8085-D8FBAE32A7E4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{860DD77D-D04B-47A2-B401-27EC7B3E51C5}"
 	ProjectSection(SolutionItems) = preProject
+		Tests\Test-AddLogEntry.ps1 = Tests\Test-AddLogEntry.ps1
+		Tests\Run-AllTests.ps1 = Tests\Run-AllTests.ps1
+		Tests\Test-AddLogEntryInvalidDate.ps1 = Tests\Test-AddLogEntryInvalidDate.ps1
+		Tests\Test-AddLogEntryInvalidTime.ps1 = Tests\Test-AddLogEntryInvalidTime.ps1
+		Tests\Test-AddLogEntryShortTime.ps1 = Tests\Test-AddLogEntryShortTime.ps1
 		Tests\Test-Health.ps1 = Tests\Test-Health.ps1
 	EndProjectSection
 EndProject
