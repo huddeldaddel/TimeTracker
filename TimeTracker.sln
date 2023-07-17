@@ -7,13 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeTracker", "TimeTracker\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{860DD77D-D04B-47A2-B401-27EC7B3E51C5}"
 	ProjectSection(SolutionItems) = preProject
-		Tests\Test-AddLogEntry.ps1 = Tests\Test-AddLogEntry.ps1
 		Tests\Run-AllTests.ps1 = Tests\Run-AllTests.ps1
-		Tests\Test-AddLogEntryInvalidDate.ps1 = Tests\Test-AddLogEntryInvalidDate.ps1
-		Tests\Test-AddLogEntryInvalidTime.ps1 = Tests\Test-AddLogEntryInvalidTime.ps1
-		Tests\Test-AddLogEntryShortTime.ps1 = Tests\Test-AddLogEntryShortTime.ps1
+		Tests\Test-AddLogEntry.ps1 = Tests\Test-AddLogEntry.ps1
 		Tests\Test-Health.ps1 = Tests\Test-Health.ps1
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeTrackerTest", "TimeTrackerTest\TimeTrackerTest.csproj", "{4C03FEEC-6329-4E42-9F34-AABE1AE84F67}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +24,10 @@ Global
 		{FBD2119D-A204-45D4-83A0-4EE385898CCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBD2119D-A204-45D4-83A0-4EE385898CCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBD2119D-A204-45D4-83A0-4EE385898CCF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C03FEEC-6329-4E42-9F34-AABE1AE84F67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C03FEEC-6329-4E42-9F34-AABE1AE84F67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C03FEEC-6329-4E42-9F34-AABE1AE84F67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C03FEEC-6329-4E42-9F34-AABE1AE84F67}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

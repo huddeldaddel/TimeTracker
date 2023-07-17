@@ -24,7 +24,7 @@ namespace TimeTracker
                 requestBody = await streamReader.ReadToEndAsync();
             }
 
-            var requestEntry = JsonConvert.DeserializeObject<EntryRequest>(requestBody);
+            var requestEntry = JsonConvert.DeserializeObject<UpsertEntryRequest>(requestBody);
             _logger.LogInformation($"C# HTTP trigger function processed a request: {requestBody}");
 
             if(null != requestEntry && requestEntry.Validate())
