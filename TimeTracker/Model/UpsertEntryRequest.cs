@@ -41,7 +41,7 @@ namespace TimeTracker.Model
             DateTime endDateTime = DateTime.ParseExact($"{Date} {ReformatTime(End)}", "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
             if (endDateTime < startDateTime)
             {
-                endDateTime.AddDays(1);
+                endDateTime = endDateTime.AddDays(1);
             }
 
             var duration = endDateTime - startDateTime;

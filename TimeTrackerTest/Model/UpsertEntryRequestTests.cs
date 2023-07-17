@@ -92,6 +92,38 @@ namespace TimeTrackerTest.Model
         }
 
         [Test]
+        public void ToEntryWorkedAtMidnight()
+        {
+            var entry = new UpsertEntryRequest
+            {
+                Date = "2023-07-17",
+                Start = "23:30",
+                End = "01:00",
+                Project = "Learning",
+                Description = "Learned Azure Functions"
+            }.ToEntry();
+
+            Assert.That(entry, Is.Not.Null);            
+            Assert.That(entry.Duration, Is.EqualTo(90));
+        }
+
+        [Test]
+        public void ToEntryWorkedNotAtAll()
+        {
+            var entry = new UpsertEntryRequest
+            {
+                Date = "2023-07-17",
+                Start = "23:30",
+                End = "23:30",
+                Project = "Learning",
+                Description = "Learned Azure Functions"
+            }.ToEntry();
+
+            Assert.That(entry, Is.Not.Null);
+            Assert.That(entry.Duration, Is.EqualTo(0));
+        }
+
+        [Test]
         public void ToEntryNotValid()
         {
             var entry = new UpsertEntryRequest
