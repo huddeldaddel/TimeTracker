@@ -3,16 +3,19 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TimeTracker.Model;
+using TimeTracker.Service;
 
 namespace TimeTracker
 {
     public class AddLogEntry
     {
         private readonly ILogger _logger;
+        private readonly IEntryService _entryService;
 
-        public AddLogEntry(ILoggerFactory loggerFactory)
+        public AddLogEntry(ILoggerFactory loggerFactory, IEntryService entryService)
         {
             _logger = loggerFactory.CreateLogger<AddLogEntry>();
+            _entryService = entryService;
         }
 
         [Function("AddLogEntry")]
@@ -25,11 +28,14 @@ namespace TimeTracker
             }
 
             var requestEntry = JsonConvert.DeserializeObject<UpsertEntryRequest>(requestBody);
-            _logger.LogInformation($"C# HTTP trigger function processed a request: {requestBody}");
+            _logger.LogInformation($"C# HTTP trigger function received a request: {requestBody}");
 
             if(null != requestEntry && requestEntry.Validate())
             {
-                return req.CreateResponse(System.Net.HttpStatusCode.OK);
+                var result = await _entryService.AddEntry(requestEntry.ToEntry()!);
+                var response = req.CreateResponse();
+                await response.WriteAsJsonAsync(result);
+                return response;
             } 
             else
             {                                

@@ -66,7 +66,7 @@ namespace TimeTracker.Model
             return JsonConvert.SerializeObject(this);
         }
 
-        private static bool ValidateDate(string? date)
+        internal static bool ValidateDate(string? date)
         {
             if(date == null) 
             {
