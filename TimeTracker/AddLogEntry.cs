@@ -28,7 +28,7 @@ namespace TimeTracker
             }
 
             var requestEntry = JsonConvert.DeserializeObject<UpsertEntryRequest>(requestBody);
-            _logger.LogInformation($"C# HTTP trigger function received a request: {requestBody}");
+            _logger.LogInformation($"AddLogEntry received a request: {requestBody}");
 
             if(null != requestEntry && requestEntry.Validate())
             {
