@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{860DD77D
 	ProjectSection(SolutionItems) = preProject
 		Tests\Run-AllTests.ps1 = Tests\Run-AllTests.ps1
 		Tests\Test-AddLogEntry.ps1 = Tests\Test-AddLogEntry.ps1
+		Tests\Test-DeleteLogEntry.ps1 = Tests\Test-DeleteLogEntry.ps1
 		Tests\Test-Health.ps1 = Tests\Test-Health.ps1
 		Tests\Test-UpdateLogEntry.ps1 = Tests\Test-UpdateLogEntry.ps1
 	EndProjectSection

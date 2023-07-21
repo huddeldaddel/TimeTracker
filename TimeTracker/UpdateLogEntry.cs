@@ -14,7 +14,7 @@ namespace TimeTracker
 
         public UpdateLogEntry(ILoggerFactory loggerFactory, IEntryService entryService)
         {
-            _logger = loggerFactory.CreateLogger<AddLogEntry>();
+            _logger = loggerFactory.CreateLogger<UpdateLogEntry>();
             _entryService = entryService;
         }
 

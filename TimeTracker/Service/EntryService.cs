@@ -9,6 +9,7 @@ namespace TimeTracker.Service
     public interface IEntryService
     {
         public Task<Entry> AddEntry(Entry entry);
+        public Task<bool> DeleteEntry(string id);
         public Task<Entry> UpdateEntry(Entry entry);
         public Task<Collection<Entry>> GetEntriesByDate(string date);
     }
@@ -58,6 +59,17 @@ namespace TimeTracker.Service
             var response = await container!.CreateItemAsync(entry, new PartitionKey(entry.PartitionKey));
             _logger.LogInformation("Created item in database with id: {id}. Operation consumed {price} RUs.", response.Resource.Id, response.RequestCharge);
             return response.Resource;
+        }
+
+        public async Task<bool> DeleteEntry(string id)
+        {
+            if (!await Initialize())
+            {
+                throw new Exception("Failed to initialize DB connection");
+            }
+            var response = await container!.DeleteItemAsync<Entry>(id, new PartitionKey(id));
+            _logger.LogInformation("Deleted item in database with id: {id}. Operation consumed {price} RUs.", id, response.RequestCharge);
+            return true;
         }
 
         public async Task<Entry> UpdateEntry(Entry entry)
