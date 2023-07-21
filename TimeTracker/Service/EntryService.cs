@@ -9,6 +9,7 @@ namespace TimeTracker.Service
     public interface IEntryService
     {
         public Task<Entry> AddEntry(Entry entry);
+        public Task<Entry> UpdateEntry(Entry entry);
         public Task<Collection<Entry>> GetEntriesByDate(string date);
     }
 
@@ -55,7 +56,19 @@ namespace TimeTracker.Service
             entry.Id = Guid.NewGuid().ToString();
             entry.PartitionKey = entry.Id;
             var response = await container!.CreateItemAsync(entry, new PartitionKey(entry.PartitionKey));
-            _logger.LogInformation($"Created item in database with id: {response.Resource.Id}. Operation consumed {response.RequestCharge} RUs.");                
+            _logger.LogInformation("Created item in database with id: {id}. Operation consumed {price} RUs.", response.Resource.Id, response.RequestCharge);
+            return response.Resource;
+        }
+
+        public async Task<Entry> UpdateEntry(Entry entry)
+        {
+            if (!await Initialize())
+            {
+                throw new Exception("Failed to initialize DB connection");
+            }
+
+            var response = await container!.ReplaceItemAsync<Entry>(entry, entry.Id, new PartitionKey(entry.PartitionKey));
+            _logger.LogInformation("Updated item in database with id: {id}. Operation consumed {price} RUs.", response.Resource.Id, response.RequestCharge);
             return response.Resource;
         }
 

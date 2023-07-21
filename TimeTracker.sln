@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{860DD77D
 		Tests\Run-AllTests.ps1 = Tests\Run-AllTests.ps1
 		Tests\Test-AddLogEntry.ps1 = Tests\Test-AddLogEntry.ps1
 		Tests\Test-Health.ps1 = Tests\Test-Health.ps1
+		Tests\Test-UpdateLogEntry.ps1 = Tests\Test-UpdateLogEntry.ps1
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeTrackerTest", "TimeTrackerTest\TimeTrackerTest.csproj", "{4C03FEEC-6329-4E42-9F34-AABE1AE84F67}"
