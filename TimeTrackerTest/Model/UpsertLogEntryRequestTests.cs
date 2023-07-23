@@ -2,7 +2,7 @@ using TimeTracker.Model;
 
 namespace TimeTrackerTest.Model
 {
-    public class UpsertEntryRequestTests
+    public class UpsertLogEntryRequestTests
     {        
         [Test]
         public void ValidateSuccess()
