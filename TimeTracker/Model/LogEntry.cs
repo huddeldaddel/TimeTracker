@@ -2,7 +2,7 @@
 
 namespace TimeTracker.Model
 {
-    public class Entry
+    public class LogEntry
     {
         [JsonProperty(PropertyName = "id")]
         public string? Id { get; set; }

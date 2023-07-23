@@ -5,7 +5,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using TimeTracker.Service;
 
-namespace TimeTracker
+namespace TimeTracker.Functions.LogEntries
 {
     public partial class GetLogEntriesForDate
     {

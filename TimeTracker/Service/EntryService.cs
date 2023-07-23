@@ -2,16 +2,17 @@
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using TimeTracker.Functions.LogEntries;
 using TimeTracker.Model;
 
 namespace TimeTracker.Service
 {
     public interface IEntryService
     {
-        public Task<Entry> AddEntry(Entry entry);
+        public Task<LogEntry> AddEntry(LogEntry entry);
         public Task<bool> DeleteEntry(string id);
-        public Task<Entry> UpdateEntry(Entry entry);
-        public Task<Collection<Entry>> GetEntriesByDate(string date);
+        public Task<LogEntry> UpdateEntry(LogEntry entry);
+        public Task<Collection<LogEntry>> GetEntriesByDate(string date);
     }
 
     internal class EntryService : IEntryService
@@ -47,7 +48,7 @@ namespace TimeTracker.Service
         }
 
 
-        public async Task<Entry> AddEntry(Entry entry)
+        public async Task<LogEntry> AddEntry(LogEntry entry)
         {
             if (!await Initialize())
             {
@@ -67,42 +68,42 @@ namespace TimeTracker.Service
             {
                 throw new Exception("Failed to initialize DB connection");
             }
-            var response = await container!.DeleteItemAsync<Entry>(id, new PartitionKey(id));
+            var response = await container!.DeleteItemAsync<LogEntry>(id, new PartitionKey(id));
             _logger.LogInformation("Deleted item in database with id: {id}. Operation consumed {price} RUs.", id, response.RequestCharge);
             return true;
         }
 
-        public async Task<Entry> UpdateEntry(Entry entry)
+        public async Task<LogEntry> UpdateEntry(LogEntry entry)
         {
             if (!await Initialize())
             {
                 throw new Exception("Failed to initialize DB connection");
             }
 
-            var response = await container!.ReplaceItemAsync<Entry>(entry, entry.Id, new PartitionKey(entry.PartitionKey));
+            var response = await container!.ReplaceItemAsync<LogEntry>(entry, entry.Id, new PartitionKey(entry.PartitionKey));
             _logger.LogInformation("Updated item in database with id: {id}. Operation consumed {price} RUs.", response.Resource.Id, response.RequestCharge);
             return response.Resource;
         }
 
-        public async Task<Collection<Entry>> GetEntriesByDate(string date)
+        public async Task<Collection<LogEntry>> GetEntriesByDate(string date)
         {
             if (!await Initialize())
             {
                 throw new Exception("Failed to initialize DB connection");
             }
 
-            if(!UpsertEntryRequest.ValidateDate(date))
+            if(!UpsertLogEntryRequest.ValidateDate(date))
             {
                 throw new ArgumentException("Date should be specified as yyyy-MM-dd");
             }
 
             var sqlQueryText = $"SELECT* FROM c WHERE c.Date = '{date}'";            
-            var queryResultSetIterator = container!.GetItemQueryIterator<Entry>(new QueryDefinition(sqlQueryText));
-            var result = new Collection<Entry>();
+            var queryResultSetIterator = container!.GetItemQueryIterator<LogEntry>(new QueryDefinition(sqlQueryText));
+            var result = new Collection<LogEntry>();
             while (queryResultSetIterator.HasMoreResults)
             {
                 var currentResultSet = await queryResultSetIterator.ReadNextAsync();                
-                foreach (Entry entry in currentResultSet)
+                foreach (LogEntry entry in currentResultSet)
                 {
                     result.Add(entry);
                 }

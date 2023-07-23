@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using TimeTracker.Model;
 using TimeTracker.Service;
 
-namespace TimeTracker
+namespace TimeTracker.Functions.LogEntries
 {
     public class AddLogEntry
     {
@@ -20,25 +20,25 @@ namespace TimeTracker
 
         [Function("AddLogEntry")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "post", Route = "logEntries")] HttpRequestData req)
-        {            
-            var requestBody = String.Empty;
+        {
+            var requestBody = string.Empty;
             using (StreamReader streamReader = new(req.Body))
             {
                 requestBody = await streamReader.ReadToEndAsync();
             }
 
-            var requestEntry = JsonConvert.DeserializeObject<UpsertEntryRequest>(requestBody);
+            var requestEntry = JsonConvert.DeserializeObject<UpsertLogEntryRequest>(requestBody);
             _logger.LogInformation($"AddLogEntry received a request: {requestBody}");
 
-            if(null != requestEntry && requestEntry.Validate())
+            if (null != requestEntry && requestEntry.Validate())
             {
-                var result = await _entryService.AddEntry(requestEntry.ToEntry()!);
+                var result = await _entryService.AddEntry(requestEntry.ToLogEntry()!);
                 var response = req.CreateResponse();
                 await response.WriteAsJsonAsync(result);
                 return response;
-            } 
+            }
             else
-            {                                
+            {
                 return req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
             }
         }

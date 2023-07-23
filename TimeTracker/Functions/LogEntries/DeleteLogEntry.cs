@@ -3,7 +3,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using TimeTracker.Service;
 
-namespace TimeTracker
+namespace TimeTracker.Functions.LogEntries
 {
     public class DeleteLogEntry
     {
@@ -18,15 +18,15 @@ namespace TimeTracker
 
         [Function("DeleteLogEntry")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "logEntries/{id}")] HttpRequestData req, string id)
-        {                                    
+        {
             _logger.LogInformation("DeleteLogEntry received a request: {id}", id);
-            if(null != id && 36 == id.Length)
+            if (null != id && 36 == id.Length)
             {
                 var result = await _entryService.DeleteEntry(id);
-                return req.CreateResponse(result ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.NotFound);                                
-            } 
+                return req.CreateResponse(result ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.NotFound);
+            }
             else
-            {                                
+            {
                 return req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
             }
         }

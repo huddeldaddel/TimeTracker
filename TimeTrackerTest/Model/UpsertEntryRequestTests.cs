@@ -7,7 +7,7 @@ namespace TimeTrackerTest.Model
         [Test]
         public void ValidateSuccess()
         {
-            var request = new UpsertEntryRequest
+            var request = new UpsertLogEntryRequest
             {
                 Date = "2023-07-17",
                 Start = "09:00",
@@ -22,7 +22,7 @@ namespace TimeTrackerTest.Model
         [Test]
         public void ValidateDateFailure()
         {
-            var request = new UpsertEntryRequest
+            var request = new UpsertLogEntryRequest
             {
                 Date = "20230717",
                 Start = "09:00",
@@ -37,7 +37,7 @@ namespace TimeTrackerTest.Model
         [Test]
         public void ValidateTimeFailure()
         {
-            var request = new UpsertEntryRequest
+            var request = new UpsertLogEntryRequest
             {
                 Date = "2023-07-17",
                 Start = "9",
@@ -52,7 +52,7 @@ namespace TimeTrackerTest.Model
         [Test]
         public void ValidateShortTime()
         {
-            var request = new UpsertEntryRequest
+            var request = new UpsertLogEntryRequest
             {
                 Date = "2023-07-17",
                 Start = "9:",
@@ -67,14 +67,14 @@ namespace TimeTrackerTest.Model
         [Test]
         public void ToEntryValid()
         {
-            var entry = new UpsertEntryRequest
+            var entry = new UpsertLogEntryRequest
             {
                 Date = "2023-07-17",
                 Start = "9:",
                 End = "11:45",
                 Project = "Learning",
                 Description = "Learned Azure Functions"
-            }.ToEntry();
+            }.ToLogEntry();
 
             Assert.That(entry, Is.Not.Null);
             Assert.Multiple(() =>
@@ -94,14 +94,14 @@ namespace TimeTrackerTest.Model
         [Test]
         public void ToEntryWorkedAtMidnight()
         {
-            var entry = new UpsertEntryRequest
+            var entry = new UpsertLogEntryRequest
             {
                 Date = "2023-07-17",
                 Start = "23:30",
                 End = "01:00",
                 Project = "Learning",
                 Description = "Learned Azure Functions"
-            }.ToEntry();
+            }.ToLogEntry();
 
             Assert.That(entry, Is.Not.Null);            
             Assert.That(entry.Duration, Is.EqualTo(90));
@@ -110,14 +110,14 @@ namespace TimeTrackerTest.Model
         [Test]
         public void ToEntryWorkedNotAtAll()
         {
-            var entry = new UpsertEntryRequest
+            var entry = new UpsertLogEntryRequest
             {
                 Date = "2023-07-17",
                 Start = "23:30",
                 End = "23:30",
                 Project = "Learning",
                 Description = "Learned Azure Functions"
-            }.ToEntry();
+            }.ToLogEntry();
 
             Assert.That(entry, Is.Not.Null);
             Assert.That(entry.Duration, Is.EqualTo(0));
@@ -126,14 +126,14 @@ namespace TimeTrackerTest.Model
         [Test]
         public void ToEntryNotValid()
         {
-            var entry = new UpsertEntryRequest
+            var entry = new UpsertLogEntryRequest
             {
                 Date = null,
                 Start = "09:00",
                 End = "11:45",
                 Project = "Learning",
                 Description = "Learned Azure Functions"
-            }.ToEntry();
+            }.ToLogEntry();
 
             Assert.That(entry, Is.Null);
         }
