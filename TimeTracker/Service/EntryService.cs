@@ -9,24 +9,26 @@ namespace TimeTracker.Service
 {
     public interface IEntryService
     {
-        public Task<LogEntry> AddEntry(LogEntry entry);
-        public Task<bool> DeleteEntry(string id);
-        public Task<LogEntry> UpdateEntry(LogEntry entry);
-        public Task<Collection<LogEntry>> GetEntriesByDate(string date);
+        public Task<LogEntry> AddLogEntry(LogEntry entry);
+        public Task<bool> DeleteLogEntry(string id);
+        public Task<LogEntry> UpdateLogEntry(LogEntry entry);
+        public Task<Collection<LogEntry>> GetLogEntriesByDate(string date);
     }
 
     internal class EntryService : IEntryService
     {        
         private readonly CosmosClient cosmosClient;
         private readonly ILogger _logger;
+        private readonly IStatisticsService _statisticsService;
         private Database? database;
         private Container? container;
 
-        public EntryService(ILoggerFactory loggerFactory)
+        public EntryService(ILoggerFactory loggerFactory, IStatisticsService statisticsService)
         {
-            _logger = loggerFactory.CreateLogger<AddLogEntry>();
+            _logger = loggerFactory.CreateLogger<EntryService>();
+            _statisticsService = statisticsService;
             var connectionString = Environment.GetEnvironmentVariable("COSMOS_CONNECTION_STRING");
-            if(null == connectionString)
+            if (null == connectionString)
             {
                 _logger.LogCritical("COSMOS_CONNECTION_STRING not specified!");
                 throw new ConfigurationErrorsException("COSMOS_CONNECTION_STRING not specified!");
@@ -48,7 +50,7 @@ namespace TimeTracker.Service
         }
 
 
-        public async Task<LogEntry> AddEntry(LogEntry entry)
+        public async Task<LogEntry> AddLogEntry(LogEntry entry)
         {
             if (!await Initialize())
             {
@@ -59,33 +61,52 @@ namespace TimeTracker.Service
             entry.PartitionKey = entry.Id;
             var response = await container!.CreateItemAsync(entry, new PartitionKey(entry.PartitionKey));
             _logger.LogInformation("Created item in database with id: {id}. Operation consumed {price} RUs.", response.Resource.Id, response.RequestCharge);
+
+            await _statisticsService.AddLogEntry(entry);
             return response.Resource;
         }
 
-        public async Task<bool> DeleteEntry(string id)
+        public async Task<bool> DeleteLogEntry(string id)
         {
             if (!await Initialize())
             {
                 throw new Exception("Failed to initialize DB connection");
             }
-            var response = await container!.DeleteItemAsync<LogEntry>(id, new PartitionKey(id));
-            _logger.LogInformation("Deleted item in database with id: {id}. Operation consumed {price} RUs.", id, response.RequestCharge);
-            return true;
+
+            var response = await container!.ReadItemAsync<LogEntry>(id, new PartitionKey(id));
+            _logger.LogInformation("Search item to delete in database with id: {id}. Operation consumed {price} RUs.", id, response.RequestCharge);
+            if (response.Resource != null)
+            {
+                await _statisticsService.DeleteLogEntry(response.Resource);
+
+                response = await container!.DeleteItemAsync<LogEntry>(id, new PartitionKey(id));
+                _logger.LogInformation("Deleted item in database with id: {id}. Operation consumed {price} RUs.", id, response.RequestCharge);
+                return true;
+            }
+
+            return false;
         }
 
-        public async Task<LogEntry> UpdateEntry(LogEntry entry)
+        public async Task<LogEntry> UpdateLogEntry(LogEntry entry)
         {
             if (!await Initialize())
             {
                 throw new Exception("Failed to initialize DB connection");
             }
 
-            var response = await container!.ReplaceItemAsync<LogEntry>(entry, entry.Id, new PartitionKey(entry.PartitionKey));
+            var response = await container!.ReadItemAsync<LogEntry>(entry.Id, new PartitionKey(entry.Id));
+            _logger.LogInformation("Search item to update in database with id: {id}. Operation consumed {price} RUs.", entry.Id, response.RequestCharge);
+            if (response.Resource != null)
+            {
+                await _statisticsService.UpdateLogEntry(response.Resource, entry);
+            }
+
+            response = await container!.ReplaceItemAsync(entry, entry.Id, new PartitionKey(entry.PartitionKey));
             _logger.LogInformation("Updated item in database with id: {id}. Operation consumed {price} RUs.", response.Resource.Id, response.RequestCharge);
             return response.Resource;
         }
 
-        public async Task<Collection<LogEntry>> GetEntriesByDate(string date)
+        public async Task<Collection<LogEntry>> GetLogEntriesByDate(string date)
         {
             if (!await Initialize())
             {

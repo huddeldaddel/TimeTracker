@@ -22,7 +22,7 @@ namespace TimeTracker.Functions.LogEntries
             _logger.LogInformation("DeleteLogEntry received a request: {id}", id);
             if (null != id && 36 == id.Length)
             {
-                var result = await _entryService.DeleteEntry(id);
+                var result = await _entryService.DeleteLogEntry(id);
                 return req.CreateResponse(result ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.NotFound);
             }
             else

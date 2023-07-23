@@ -29,7 +29,7 @@ namespace TimeTracker.Functions.LogEntries
             }
             
             var response = req.CreateResponse();
-            var result = await _entryService.GetEntriesByDate(date);
+            var result = await _entryService.GetLogEntriesByDate(date);
             await response.WriteAsJsonAsync(result);
             return response;
         }

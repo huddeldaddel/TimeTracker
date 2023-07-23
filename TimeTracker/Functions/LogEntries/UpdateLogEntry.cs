@@ -32,7 +32,7 @@ namespace TimeTracker.Functions.LogEntries
 
             if (null != requestEntry && requestEntry.Validate())
             {
-                var result = await _entryService.UpdateEntry(requestEntry.ToLogEntry()!);
+                var result = await _entryService.UpdateLogEntry(requestEntry.ToLogEntry()!);
                 var response = req.CreateResponse();
                 await response.WriteAsJsonAsync(result);
                 return response;
