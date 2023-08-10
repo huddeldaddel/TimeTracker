@@ -21,7 +21,7 @@ namespace TimeTracker.Functions.LogEntries
         [Function("GetLogEntriesForDate")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "get", Route = "logEntries/{date}")] HttpRequestData req, string date)
         {
-            _logger.LogInformation($"GetLogEntriesForDate received a request for {date}");
+            _logger.LogInformation("GetLogEntriesForDate received a request for {date}", date);
             
             if(!DateRegEx().Match(date).Success)
             {

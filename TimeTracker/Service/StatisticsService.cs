@@ -9,6 +9,7 @@ namespace TimeTracker.Service
     {
         public Task<LogAggregationByYear> AddLogEntry(LogEntry entry);
         public Task<LogAggregationByYear> DeleteLogEntry(LogEntry entry);
+        public Task<LogAggregationByYear?> GetByYear(string year);
         public Task<LogAggregationByYear> UpdateLogEntry(LogEntry oldValue, LogEntry newValue);
     }
 
@@ -103,6 +104,28 @@ namespace TimeTracker.Service
                 _logger.LogWarning("No statistics found for {year}.", entry.Year);
                 return new LogAggregationByYear();
             }                       
+        }
+
+        public async Task<LogAggregationByYear?> GetByYear(string year)
+        {
+            if (!await Initialize())
+            {
+                throw new Exception("Failed to initialize DB connection");
+            }
+
+            var key = $"00000000-0000-0000-0000-00000000{year}";
+            try
+            {
+                var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
+                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", year, response.RequestCharge);
+                return response.Resource;                
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // This could happen. The log entry is not existing.
+                _logger.LogWarning("Failed to find statistics for {year}.", year);
+                return null;
+            }
         }
 
         public async Task<LogAggregationByYear> UpdateLogEntry(LogEntry oldValue, LogEntry newValue)
