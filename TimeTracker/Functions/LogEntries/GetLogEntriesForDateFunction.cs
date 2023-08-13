@@ -46,7 +46,7 @@ namespace TimeTracker.Functions.LogEntries
         {
             _getLogEntriesForDateFunctionExecuting = LoggerMessage.Define<string>(
                  logLevel: LogLevel.Debug,
-                 eventId: 2,
+                 eventId: 6,
                  formatString: "GetLogEntriesForDateFunction is processing a HTTP trigger for date {Date}");
         }
 

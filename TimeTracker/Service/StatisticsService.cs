@@ -13,7 +13,7 @@ namespace TimeTracker.Service
         public Task<LogAggregationByYear> UpdateLogEntry(LogEntry oldValue, LogEntry newValue);
     }
 
-    internal class StatisticsService : IStatisticsService, IDisposable
+    sealed internal class StatisticsService : IStatisticsService, IDisposable
     {
         private readonly CosmosClient cosmosClient;
         private readonly ILogger _logger;
@@ -49,7 +49,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                throw new IOException("Failed to initialize DB connection");
             }
 
             var key = $"00000000-0000-0000-0000-00000000{entry.Year}";
@@ -84,7 +84,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                throw new IOException("Failed to initialize DB connection");
             }
 
             var key = $"00000000-0000-0000-0000-00000000{entry.Year}";
@@ -110,7 +110,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                throw new IOException("Failed to initialize DB connection");
             }
 
             var key = $"00000000-0000-0000-0000-00000000{year}";
@@ -132,7 +132,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                throw new IOException("Failed to initialize DB connection");
             }
 
             if(oldValue.Year != newValue.Year)

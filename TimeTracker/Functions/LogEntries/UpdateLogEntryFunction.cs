@@ -28,7 +28,7 @@ namespace TimeTracker.Functions.LogEntries
             }
 
             var requestEntry = JsonConvert.DeserializeObject<UpsertLogEntryRequest>(requestBody);
-            _logger.LogInformation("UpdateLogEntry received a request: {body}", requestBody);
+            _logger.UpdateLogEntryFunctionExecuting(requestBody);
 
             if (null != requestEntry && requestEntry.Validate())
             {

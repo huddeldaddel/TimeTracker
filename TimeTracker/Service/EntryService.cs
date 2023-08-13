@@ -12,7 +12,7 @@ namespace TimeTracker.Service
         public Task<LogEntry> AddLogEntry(LogEntry entry);
         public Task<bool> DeleteLogEntry(string id);
         public Task<LogEntry> UpdateLogEntry(LogEntry entry);
-        public Task<Collection<LogEntry>> GetLogEntriesByDate(string date);
+        public Task<Collection<LogEntry>> GetLogEntriesByDate(string dateStr);
     }
 
     sealed internal class EntryService : IEntryService, IDisposable
@@ -54,7 +54,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                throw new IOException("Failed to initialize DB connection");
             }
                             
             entry.Id = Guid.NewGuid().ToString();
@@ -70,7 +70,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                throw new IOException("Failed to initialize DB connection");
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(id, new PartitionKey(id));
@@ -91,7 +91,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                throw new IOException("Failed to initialize DB connection");
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(entry.Id, new PartitionKey(entry.Id));
@@ -110,7 +110,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                throw new IOException("Failed to initialize DB connection");
             }
 
             if(!UpsertLogEntryRequest.ValidateDate(date))
