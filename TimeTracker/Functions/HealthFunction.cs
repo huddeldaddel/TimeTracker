@@ -1,7 +1,6 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using System.Net;
 
 namespace TimeTracker.Functions
 {
@@ -17,7 +16,7 @@ namespace TimeTracker.Functions
         [Function("health")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "health")] HttpRequestData req)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
+            _logger.HealthFunctionExecuting();
 
             var response = req.CreateResponse();
             await response.WriteAsJsonAsync(new
@@ -26,6 +25,24 @@ namespace TimeTracker.Functions
                 Status = "healthy"
             });
             return response;
+        }
+    }
+
+    internal static class HealthFunctionLoggerExtensions
+    {
+        private static readonly Action<ILogger, Exception?> _healthFunctionExecuting;
+
+        static HealthFunctionLoggerExtensions()
+        {
+            _healthFunctionExecuting = LoggerMessage.Define(
+                logLevel: LogLevel.Debug,
+                eventId: 1,
+                formatString: "HealthFunction is processing a HTTP trigger");
+        }
+
+        public static void HealthFunctionExecuting(this ILogger logger)
+        {
+            _healthFunctionExecuting(logger, null);
         }
     }
 }

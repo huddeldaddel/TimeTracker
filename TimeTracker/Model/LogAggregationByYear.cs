@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Globalization;
 
 namespace TimeTracker.Model
 {
@@ -21,7 +22,7 @@ namespace TimeTracker.Model
             if(null != entry.Month)
             {
                 LogAggregation month;
-                var key = entry.Month.Value.ToString();
+                var key = entry.Month.Value.ToString(CultureInfo.InvariantCulture.NumberFormat);
                 if(Months.ContainsKey(key))
                 {
                     month = Months[key];
@@ -37,7 +38,7 @@ namespace TimeTracker.Model
             if (null != entry.Week)
             {
                 LogAggregation week;
-                var key = entry.Week.Value.ToString();
+                var key = entry.Week.Value.ToString(CultureInfo.InvariantCulture.NumberFormat);
                 if(Weeks.ContainsKey(key))
                 {
                     week = Weeks[key];
@@ -57,12 +58,11 @@ namespace TimeTracker.Model
 
             if (null != entry.Month)
             {
-                var key = entry.Month.Value.ToString();
-                if (Months.ContainsKey(key))
+                var key = entry.Month.Value.ToString(CultureInfo.InvariantCulture.NumberFormat);
+                if(Months.TryGetValue(key, out LogAggregation? month))
                 {
-                    var month = Months[key];
                     month.RemoveLogEntry(entry);
-                    if(month.IsEmpty())
+                    if (month.IsEmpty())
                     {
                         Months.Remove(key);
                     }
@@ -71,16 +71,15 @@ namespace TimeTracker.Model
 
             if (null != entry.Week)
             {
-                var key = entry.Week.Value.ToString();
-                if(Weeks.ContainsKey(key))
+                var key = entry.Week.Value.ToString(CultureInfo.InvariantCulture.NumberFormat);
+                if(Weeks.TryGetValue(key, out LogAggregation? week))
                 {
-                    var week = Weeks[key];
                     week.RemoveLogEntry(entry);
                     if (week.IsEmpty())
                     {
                         Weeks.Remove(key);
                     }
-                }
+                }                
             }
         }
     }

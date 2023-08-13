@@ -13,7 +13,7 @@ namespace TimeTracker.Service
         public Task<LogAggregationByYear> UpdateLogEntry(LogEntry oldValue, LogEntry newValue);
     }
 
-    internal class StatisticsService : IStatisticsService
+    internal class StatisticsService : IStatisticsService, IDisposable
     {
         private readonly CosmosClient cosmosClient;
         private readonly ILogger _logger;
@@ -56,17 +56,17 @@ namespace TimeTracker.Service
             try
             {
                 var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
-                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogInformation("Found existing statistics for {Year}. Operation consumed {Price} RUs.", entry.Year, response.RequestCharge);
 
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.AddLogEntry(entry);
                 response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
-                _logger.LogInformation("Updated statistics {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogInformation("Updated statistics {Year}. Operation consumed {Price} RUs.", entry.Year, response.RequestCharge);
                 return updatedLogAggregation;
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogInformation("No statistics found for {year}.", entry.Year);
+                _logger.LogInformation("No statistics found for {Year}.", entry.Year);
                 var newLogAggregation = new LogAggregationByYear
                 {
                     Id = key,
@@ -75,7 +75,7 @@ namespace TimeTracker.Service
                 newLogAggregation.AddLogEntry(entry);
 
                 var response = await container!.CreateItemAsync(newLogAggregation, new PartitionKey(key));
-                _logger.LogInformation("Inserted new statistics for {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogInformation("Inserted new statistics for {Year}. Operation consumed {Price} RUs.", entry.Year, response.RequestCharge);
                 return response.Resource;
             }
         }
@@ -91,17 +91,17 @@ namespace TimeTracker.Service
             try
             {
                 var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
-                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogInformation("Found existing statistics for {Year}. Operation consumed {Price} RUs.", entry.Year, response.RequestCharge);
 
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.RemoveLogEntry(entry);
                 response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
-                _logger.LogInformation("Updated statistics {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogInformation("Updated statistics {Year}. Operation consumed {Price} RUs.", entry.Year, response.RequestCharge);
                 return updatedLogAggregation;
             } 
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("No statistics found for {year}.", entry.Year);
+                _logger.LogWarning("No statistics found for {Year}.", entry.Year);
                 return new LogAggregationByYear();
             }                       
         }
@@ -117,13 +117,13 @@ namespace TimeTracker.Service
             try
             {
                 var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
-                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", year, response.RequestCharge);
+                _logger.LogInformation("Found existing statistics for {Year}. Operation consumed {Price} RUs.", year, response.RequestCharge);
                 return response.Resource;                
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 // This could happen. The log entry is not existing.
-                _logger.LogWarning("Failed to find statistics for {year}.", year);
+                _logger.LogWarning("Failed to find statistics for {Year}.", year);
                 return null;
             }
         }
@@ -145,20 +145,20 @@ namespace TimeTracker.Service
             try
             {
                 var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
-                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", newValue.Year, response.RequestCharge);
+                _logger.LogInformation("Found existing statistics for {Year}. Operation consumed {Price} RUs.", newValue.Year, response.RequestCharge);
 
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.RemoveLogEntry(oldValue);
                 updatedLogAggregation.AddLogEntry(newValue);
                 response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
-                _logger.LogInformation("Updated statistics {year}. Operation consumed {price} RUs.", newValue.Year, response.RequestCharge);
+                _logger.LogInformation("Updated statistics {Year}. Operation consumed {Price} RUs.", newValue.Year, response.RequestCharge);
                 return updatedLogAggregation;
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 // This should not happen. The log entry is existing and the year didn't change.
                 // Means that the statistics are not in sync with log entries :(
-                _logger.LogWarning("Failed to find statistics for {year}.", newValue.Year);
+                _logger.LogWarning("Failed to find statistics for {Year}.", newValue.Year);
 
                 var newLogAggregation = new LogAggregationByYear
                 {
@@ -167,9 +167,14 @@ namespace TimeTracker.Service
                 };
 
                 var response = await container!.CreateItemAsync(newLogAggregation, new PartitionKey(key));
-                _logger.LogInformation("Inserted new statistics for {year}. Operation consumed {price} RUs.", newValue.Year, response.RequestCharge);
+                _logger.LogInformation("Inserted new statistics for {Year}. Operation consumed {Price} RUs.", newValue.Year, response.RequestCharge);
                 return response.Resource;
             }                                                
+        }
+
+        public void Dispose()
+        {
+            this.cosmosClient?.Dispose();
         }
     }
 }

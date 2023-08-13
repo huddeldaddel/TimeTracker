@@ -2,8 +2,8 @@
 {
     public class LogAggregation
     {
-        public int Duration { get; set; } = 0;
-        public int Entries { get; set; } = 0;
+        public int Duration { get; set; }
+        public int Entries { get; set; }
         public Dictionary<string, ProjectAggregation> Projects { get; set; } = new Dictionary<string, ProjectAggregation>();
 
         public void AddLogEntry(LogEntry entry)
@@ -16,18 +16,13 @@
             Entries++;
 
             if(null != entry.Project)
-            {
-                ProjectAggregation project;
+            {                
                 var key = entry.Project.Trim();
-                if(Projects.ContainsKey(key))
+                if (!Projects.TryGetValue(key, out ProjectAggregation? project))
                 {
-                    project = Projects[key];
-                }
-                else
-                {                
                     project = new ProjectAggregation();
                     Projects.Add(key, project);
-                } 
+                }
                 project.AddLogEntry(entry);
             }
         }
@@ -44,11 +39,10 @@
             if (null != entry.Project)
             {
                 var key = entry.Project.Trim();
-                if (Projects.ContainsKey(key))
+                if(Projects.TryGetValue(key, out ProjectAggregation? project))
                 {
-                    var project = Projects[key];
                     project.RemoveLogEntry(entry);
-                    if(project.IsEmpty())
+                    if (project.IsEmpty())
                     {
                         Projects.Remove(key);
                     }

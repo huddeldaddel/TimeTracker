@@ -7,14 +7,14 @@ using TimeTracker.Service;
 
 namespace TimeTracker.Functions.LogEntries
 {
-    public class AddLogEntry
+    public class AddLogEntryFunction
     {
         private readonly ILogger _logger;
         private readonly IEntryService _entryService;
 
-        public AddLogEntry(ILoggerFactory loggerFactory, IEntryService entryService)
+        public AddLogEntryFunction(ILoggerFactory loggerFactory, IEntryService entryService)
         {
-            _logger = loggerFactory.CreateLogger<AddLogEntry>();
+            _logger = loggerFactory.CreateLogger<AddLogEntryFunction>();
             _entryService = entryService;
         }
 
@@ -28,7 +28,7 @@ namespace TimeTracker.Functions.LogEntries
             }
 
             var requestEntry = JsonConvert.DeserializeObject<UpsertLogEntryRequest>(requestBody);
-            _logger.LogInformation($"AddLogEntry received a request: {requestBody}");
+            _logger.AddLogEntryFunctionExecuting(requestBody);
 
             if (null != requestEntry && requestEntry.Validate())
             {
@@ -41,6 +41,24 @@ namespace TimeTracker.Functions.LogEntries
             {
                 return req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
             }
+        }
+    }
+
+    internal static class AddLogEntryLoggerExtensions
+    {
+        private static readonly Action<ILogger, string, Exception?> _addEntryFunctionExecuting;
+
+        static AddLogEntryLoggerExtensions()
+        {
+            _addEntryFunctionExecuting = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Debug,
+                eventId: 4,
+                formatString: "AddLogEntryFunction is processing a HTTP trigger with body {Body}");
+        }
+
+        public static void AddLogEntryFunctionExecuting(this ILogger logger, string body)
+        {
+            _addEntryFunctionExecuting(logger, body, null);
         }
     }
 }

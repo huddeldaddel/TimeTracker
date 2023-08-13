@@ -2,8 +2,8 @@
 {
     public class ProjectAggregation
     {       
-        public int Duration { get; set; } = 0;
-        public int Entries { get; set; } = 0;
+        public int Duration { get; set; }
+        public int Entries { get; set; }
 
         public void AddLogEntry(LogEntry entry)
         {            

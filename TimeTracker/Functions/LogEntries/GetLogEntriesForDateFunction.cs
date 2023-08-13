@@ -7,21 +7,21 @@ using TimeTracker.Service;
 
 namespace TimeTracker.Functions.LogEntries
 {
-    public partial class GetLogEntriesForDate
+    public partial class GetLogEntriesForDateFunction
     {
         private readonly ILogger _logger;
         private readonly IEntryService _entryService;
 
-        public GetLogEntriesForDate(ILoggerFactory loggerFactory, IEntryService entryService)
+        public GetLogEntriesForDateFunction(ILoggerFactory loggerFactory, IEntryService entryService)
         {
-            _logger = loggerFactory.CreateLogger<GetLogEntriesForDate>();
+            _logger = loggerFactory.CreateLogger<GetLogEntriesForDateFunction>();
             _entryService = entryService;
         }
 
         [Function("GetLogEntriesForDate")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "get", Route = "logEntries/{date}")] HttpRequestData req, string date)
         {
-            _logger.LogInformation("GetLogEntriesForDate received a request for {date}", date);
+            _logger.GetLogEntriesForDateFunctionExecuting(date);
             
             if(!DateRegEx().Match(date).Success)
             {
@@ -36,5 +36,23 @@ namespace TimeTracker.Functions.LogEntries
 
         [GeneratedRegex("\\d{4}-\\d{1,2}\\d{1,2}", RegexOptions.IgnoreCase, "de-DE")]
         private static partial Regex DateRegEx();
+    }
+
+    internal static class GetLogEntriesForDateLoggerExtensions
+    {
+        private static readonly Action<ILogger, string, Exception?> _getLogEntriesForDateFunctionExecuting;
+
+        static GetLogEntriesForDateLoggerExtensions()
+        {
+            _getLogEntriesForDateFunctionExecuting = LoggerMessage.Define<string>(
+                 logLevel: LogLevel.Debug,
+                 eventId: 2,
+                 formatString: "GetLogEntriesForDateFunction is processing a HTTP trigger for date {Date}");
+        }
+
+        public static void GetLogEntriesForDateFunctionExecuting(this ILogger logger, string date)
+        {
+            _getLogEntriesForDateFunctionExecuting(logger, date, null);
+        }
     }
 }

@@ -6,9 +6,6 @@ namespace TimeTracker.Model
 {
     public partial class UpsertLogEntryRequest
     {
-        private const string DATE_PATTERN = @"\d{4}-\d{1,2}\d{1,2}";
-        private const string TIME_PATTERN = @"(\d{1,2}):(\d{0,2})";
-
         public string? Id { get; set; }        
         public string? Date { get; set; }
         public string? Start { get; set; }

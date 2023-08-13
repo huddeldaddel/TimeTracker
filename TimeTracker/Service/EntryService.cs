@@ -15,7 +15,7 @@ namespace TimeTracker.Service
         public Task<Collection<LogEntry>> GetLogEntriesByDate(string date);
     }
 
-    internal class EntryService : IEntryService
+    sealed internal class EntryService : IEntryService, IDisposable
     {        
         private readonly CosmosClient cosmosClient;
         private readonly ILogger _logger;
@@ -60,7 +60,7 @@ namespace TimeTracker.Service
             entry.Id = Guid.NewGuid().ToString();
             entry.PartitionKey = entry.Id;
             var response = await container!.CreateItemAsync(entry, new PartitionKey(entry.PartitionKey));
-            _logger.LogInformation("Created item in database with id: {id}. Operation consumed {price} RUs.", response.Resource.Id, response.RequestCharge);
+            _logger.LogInformation("Created item in database with id: {Id}. Operation consumed {Price} RUs.", response.Resource.Id, response.RequestCharge);
 
             await _statisticsService.AddLogEntry(entry);
             return response.Resource;
@@ -74,13 +74,13 @@ namespace TimeTracker.Service
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(id, new PartitionKey(id));
-            _logger.LogInformation("Search item to delete in database with id: {id}. Operation consumed {price} RUs.", id, response.RequestCharge);
+            _logger.LogInformation("Search item to delete in database with id: {Id}. Operation consumed {Price} RUs.", id, response.RequestCharge);
             if (response.Resource != null)
             {
                 await _statisticsService.DeleteLogEntry(response.Resource);
 
                 response = await container!.DeleteItemAsync<LogEntry>(id, new PartitionKey(id));
-                _logger.LogInformation("Deleted item in database with id: {id}. Operation consumed {price} RUs.", id, response.RequestCharge);
+                _logger.LogInformation("Deleted item in database with id: {Id}. Operation consumed {Price} RUs.", id, response.RequestCharge);
                 return true;
             }
 
@@ -95,14 +95,14 @@ namespace TimeTracker.Service
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(entry.Id, new PartitionKey(entry.Id));
-            _logger.LogInformation("Search item to update in database with id: {id}. Operation consumed {price} RUs.", entry.Id, response.RequestCharge);
+            _logger.LogInformation("Search item to update in database with id: {Id}. Operation consumed {Price} RUs.", entry.Id, response.RequestCharge);
             if (response.Resource != null)
             {
                 await _statisticsService.UpdateLogEntry(response.Resource, entry);
             }
 
             response = await container!.ReplaceItemAsync(entry, entry.Id, new PartitionKey(entry.PartitionKey));
-            _logger.LogInformation("Updated item in database with id: {id}. Operation consumed {price} RUs.", response.Resource.Id, response.RequestCharge);
+            _logger.LogInformation("Updated item in database with id: {Id}. Operation consumed {Price} RUs.", response.Resource.Id, response.RequestCharge);
             return response.Resource;
         }
 
@@ -132,5 +132,9 @@ namespace TimeTracker.Service
             return result;
         }
 
+        public void Dispose()
+        {
+            this.cosmosClient.Dispose();
+        }
     }
 }
