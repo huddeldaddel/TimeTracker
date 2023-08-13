@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Configuration;
-using TimeTracker.Functions.LogEntries;
 using TimeTracker.Model;
 
 namespace TimeTracker.Service
@@ -30,7 +29,7 @@ namespace TimeTracker.Service
             var connectionString = Environment.GetEnvironmentVariable("COSMOS_CONNECTION_STRING");
             if (null == connectionString)
             {
-                _logger.LogCritical("COSMOS_CONNECTION_STRING not specified!");
+                _logger.LogConnectionStringNotSet();
                 throw new ConfigurationErrorsException("COSMOS_CONNECTION_STRING not specified!");
             }
             cosmosClient = new CosmosClient(connectionString);            
@@ -54,13 +53,14 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
+                _logger.LogInitializationFailure();
                 throw new IOException("Failed to initialize DB connection");
             }
                             
             entry.Id = Guid.NewGuid().ToString();
             entry.PartitionKey = entry.Id;
             var response = await container!.CreateItemAsync(entry, new PartitionKey(entry.PartitionKey));
-            _logger.LogInformation("Created item in database with id: {Id}. Operation consumed {Price} RUs.", response.Resource.Id, response.RequestCharge);
+            _logger.LogLogEntryCreated(response.Resource.Id);
 
             await _statisticsService.AddLogEntry(entry);
             return response.Resource;
@@ -70,17 +70,18 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
+                _logger.LogInitializationFailure();
                 throw new IOException("Failed to initialize DB connection");
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(id, new PartitionKey(id));
-            _logger.LogInformation("Search item to delete in database with id: {Id}. Operation consumed {Price} RUs.", id, response.RequestCharge);
+            _logger.LogReadLogEntry(id);
             if (response.Resource != null)
             {
                 await _statisticsService.DeleteLogEntry(response.Resource);
 
-                response = await container!.DeleteItemAsync<LogEntry>(id, new PartitionKey(id));
-                _logger.LogInformation("Deleted item in database with id: {Id}. Operation consumed {Price} RUs.", id, response.RequestCharge);
+                await container!.DeleteItemAsync<LogEntry>(id, new PartitionKey(id));
+                _logger.LogDeletedLogEntry(id);
                 return true;
             }
 
@@ -91,18 +92,19 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
+                _logger.LogInitializationFailure();
                 throw new IOException("Failed to initialize DB connection");
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(entry.Id, new PartitionKey(entry.Id));
-            _logger.LogInformation("Search item to update in database with id: {Id}. Operation consumed {Price} RUs.", entry.Id, response.RequestCharge);
+            _logger.LogReadLogEntry(entry.Id);
             if (response.Resource != null)
             {
                 await _statisticsService.UpdateLogEntry(response.Resource, entry);
             }
 
             response = await container!.ReplaceItemAsync(entry, entry.Id, new PartitionKey(entry.PartitionKey));
-            _logger.LogInformation("Updated item in database with id: {Id}. Operation consumed {Price} RUs.", response.Resource.Id, response.RequestCharge);
+            _logger.LogLogEntryUpdated(response.Resource.Id);
             return response.Resource;
         }
 
@@ -110,6 +112,7 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
+                _logger.LogInitializationFailure();
                 throw new IOException("Failed to initialize DB connection");
             }
 
@@ -135,6 +138,55 @@ namespace TimeTracker.Service
         public void Dispose()
         {
             this.cosmosClient.Dispose();
+        }
+    }
+
+    internal static class EntryServiceLoggerExtensions
+    {
+        
+        private static readonly Action<ILogger, string, Exception?> _createdLogEntry;        
+        private static readonly Action<ILogger, string, Exception?> _deletedLogEntry;
+        private static readonly Action<ILogger, string, Exception?> _readLogEntry;
+        private static readonly Action<ILogger, string, Exception?> _updatedLogEntry;
+
+        static EntryServiceLoggerExtensions()
+        {
+            _createdLogEntry = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 14,
+                formatString: "Inserted log entry {Id} into database.");
+            _deletedLogEntry = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 14,
+                formatString: "Deleted log entry {Id} from database.");
+            _readLogEntry = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 15,
+                formatString: "Found log entry {Id} in database.");
+            _updatedLogEntry = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 13,
+                formatString: "Updated log entry {Id} in database.");
+        }                       
+
+        public static void LogDeletedLogEntry(this ILogger logger, string? id)
+        {
+            _deletedLogEntry(logger, id ?? "", null);
+        }
+
+        public static void LogLogEntryCreated(this ILogger logger, string? id)
+        {
+            _createdLogEntry(logger, id ?? "", null);
+        }
+
+        public static void LogReadLogEntry(this ILogger logger, string? id)
+        {
+            _readLogEntry(logger, id ?? "", null);
+        }
+     
+        public static void LogLogEntryUpdated(this ILogger logger, string? id)
+        {
+            _updatedLogEntry(logger, id ?? "", null);
         }
     }
 }
