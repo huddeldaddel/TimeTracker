@@ -13,7 +13,7 @@ namespace TimeTracker.Service
         public Task<LogAggregationByYear> UpdateLogEntry(LogEntry oldValue, LogEntry newValue);
     }
 
-    internal class StatisticsService : IStatisticsService
+    sealed internal class StatisticsService : IStatisticsService, IDisposable
     {
         private readonly CosmosClient cosmosClient;
         private readonly ILogger _logger;
@@ -26,7 +26,7 @@ namespace TimeTracker.Service
             var connectionString = Environment.GetEnvironmentVariable("COSMOS_CONNECTION_STRING");
             if (null == connectionString)
             {
-                _logger.LogCritical("COSMOS_CONNECTION_STRING not specified!");
+                _logger.LogConnectionStringNotSet();
                 throw new ConfigurationErrorsException("COSMOS_CONNECTION_STRING not specified!");
             }
             cosmosClient = new CosmosClient(connectionString);
@@ -49,24 +49,25 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                _logger.LogInitializationFailure();
+                throw new IOException("Failed to initialize DB connection");
             }
 
             var key = $"00000000-0000-0000-0000-00000000{entry.Year}";
             try
             {
                 var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
-                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogStatisticsReadForYear(entry.Year);
 
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.AddLogEntry(entry);
                 response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
-                _logger.LogInformation("Updated statistics {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogStatisticsUpdatedForYear(entry.Year);
                 return updatedLogAggregation;
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogInformation("No statistics found for {year}.", entry.Year);
+                _logger.LogNoStatisticsForYear(entry.Year);
                 var newLogAggregation = new LogAggregationByYear
                 {
                     Id = key,
@@ -75,7 +76,7 @@ namespace TimeTracker.Service
                 newLogAggregation.AddLogEntry(entry);
 
                 var response = await container!.CreateItemAsync(newLogAggregation, new PartitionKey(key));
-                _logger.LogInformation("Inserted new statistics for {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogStatisticsCreatedForYear(entry.Year);
                 return response.Resource;
             }
         }
@@ -84,24 +85,25 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                _logger.LogInitializationFailure();
+                throw new IOException("Failed to initialize DB connection");
             }
 
             var key = $"00000000-0000-0000-0000-00000000{entry.Year}";
             try
             {
                 var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
-                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogStatisticsReadForYear(entry.Year);
 
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.RemoveLogEntry(entry);
                 response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
-                _logger.LogInformation("Updated statistics {year}. Operation consumed {price} RUs.", entry.Year, response.RequestCharge);
+                _logger.LogStatisticsUpdatedForYear(entry.Year);
                 return updatedLogAggregation;
             } 
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("No statistics found for {year}.", entry.Year);
+                _logger.LogNoStatisticsForYear(entry.Year);
                 return new LogAggregationByYear();
             }                       
         }
@@ -110,20 +112,21 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                _logger.LogInitializationFailure();
+                throw new IOException("Failed to initialize DB connection");
             }
 
             var key = $"00000000-0000-0000-0000-00000000{year}";
             try
             {
                 var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
-                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", year, response.RequestCharge);
+                _logger.LogStatisticsReadForYear(year);
                 return response.Resource;                
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 // This could happen. The log entry is not existing.
-                _logger.LogWarning("Failed to find statistics for {year}.", year);
+                _logger.LogNoStatisticsForYear(year);
                 return null;
             }
         }
@@ -132,7 +135,8 @@ namespace TimeTracker.Service
         {
             if (!await Initialize())
             {
-                throw new Exception("Failed to initialize DB connection");
+                _logger.LogInitializationFailure();
+                throw new IOException("Failed to initialize DB connection");
             }
 
             if(oldValue.Year != newValue.Year)
@@ -145,20 +149,20 @@ namespace TimeTracker.Service
             try
             {
                 var response = await container!.ReadItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
-                _logger.LogInformation("Found existing statistics for {year}. Operation consumed {price} RUs.", newValue.Year, response.RequestCharge);
+                _logger.LogStatisticsReadForYear(newValue.Year);
 
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.RemoveLogEntry(oldValue);
                 updatedLogAggregation.AddLogEntry(newValue);
                 response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
-                _logger.LogInformation("Updated statistics {year}. Operation consumed {price} RUs.", newValue.Year, response.RequestCharge);
+                _logger.LogStatisticsUpdatedForYear(newValue.Year);
                 return updatedLogAggregation;
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 // This should not happen. The log entry is existing and the year didn't change.
                 // Means that the statistics are not in sync with log entries :(
-                _logger.LogWarning("Failed to find statistics for {year}.", newValue.Year);
+                _logger.LogNoStatisticsForYear(newValue.Year);
 
                 var newLogAggregation = new LogAggregationByYear
                 {
@@ -167,9 +171,120 @@ namespace TimeTracker.Service
                 };
 
                 var response = await container!.CreateItemAsync(newLogAggregation, new PartitionKey(key));
-                _logger.LogInformation("Inserted new statistics for {year}. Operation consumed {price} RUs.", newValue.Year, response.RequestCharge);
+                _logger.LogStatisticsCreatedForYear(newValue.Year);
                 return response.Resource;
             }                                                
+        }
+
+        public void Dispose()
+        {
+            this.cosmosClient?.Dispose();
+        }
+    }
+
+    internal static class StatisticsServiceLoggerExtensions
+    {
+        private static readonly Action<ILogger, Exception?> _connectionStringNotSet;
+        private static readonly Action<ILogger, string, Exception?> _createdStatisticsForYear;
+        private static readonly Action<ILogger, Exception?> _initializationFailure;
+        private static readonly Action<ILogger, string, Exception?> _noStatisticsForYear;
+        private static readonly Action<ILogger, string, Exception?> _readStatisticsForYear;
+        private static readonly Action<ILogger, string, Exception?> _updatedStatisticsForYear;
+
+        static StatisticsServiceLoggerExtensions()
+        {
+            _connectionStringNotSet = LoggerMessage.Define(
+                logLevel: LogLevel.Critical,
+                eventId: 12,
+                formatString: "COSMOS_CONNECTION_STRING not specified!");
+            _createdStatisticsForYear = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 9,
+                formatString: "Inserted new statistics for {Year}.");
+            _initializationFailure = LoggerMessage.Define(
+                logLevel: LogLevel.Critical,
+                eventId: 7,
+                formatString: "Failed to initialize DB connection");
+            _noStatisticsForYear = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 8,
+                formatString: "Failed to find statistics for {Year}.");
+            _readStatisticsForYear = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 10,
+                formatString: "Found to statistics for {Year}.");
+            _updatedStatisticsForYear = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 11,
+                formatString: "Updated statistics for {Year}.");
+        }
+
+        public static void LogConnectionStringNotSet(this ILogger logger)
+        {
+            _connectionStringNotSet(logger, null);
+        }
+
+        public static void LogInitializationFailure(this ILogger logger)
+        {
+            _initializationFailure(logger, null);
+        }
+
+        public static void LogNoStatisticsForYear(this ILogger logger, string year)
+        {
+            _noStatisticsForYear(logger, year, null);
+        }
+
+        public static void LogNoStatisticsForYear(this ILogger logger, int? year)
+        {
+            if(null == year)
+            {
+                _noStatisticsForYear(logger, "", null);
+            }
+            else
+            {
+                _noStatisticsForYear(logger, year.ToString()!, null);
+            }            
+        }
+
+        public static void LogStatisticsCreatedForYear(this ILogger logger, int? year)
+        {
+            if (null == year)
+            {
+                _createdStatisticsForYear(logger, "", null);
+            }
+            else
+            {
+                _createdStatisticsForYear(logger, year.ToString()!, null);
+            }
+        }
+
+        public static void LogStatisticsReadForYear(this ILogger logger, string year)
+        {
+            _readStatisticsForYear(logger, year, null);
+        }
+
+        public static void LogStatisticsReadForYear(this ILogger logger, int? year)
+        {
+            if (null == year)
+            {
+                _readStatisticsForYear(logger, "", null);
+            }
+            else
+            {
+                _readStatisticsForYear(logger, year.ToString()!, null);
+            }
+        }
+
+        public static void LogStatisticsUpdatedForYear(this ILogger logger, int? year)
+        {
+            if (null == year)
+            {
+                _updatedStatisticsForYear(logger, "", null);
+            }
+            else
+            {
+                _updatedStatisticsForYear(logger, year.ToString()!, null);
+            }
         }
     }
 }
