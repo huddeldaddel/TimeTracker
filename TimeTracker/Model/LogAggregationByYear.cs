@@ -14,6 +14,7 @@ namespace TimeTracker.Model
         public LogAggregation Year { get; set; } = new LogAggregation();
         public Dictionary<string, LogAggregation> Months { get; set; } = new Dictionary<string, LogAggregation>();
         public Dictionary<string, LogAggregation> Weeks { get; set; } = new Dictionary<string, LogAggregation>();
+        public Dictionary<string, WorkingDayAggregation> Days { get; set; } = new Dictionary<string, WorkingDayAggregation>();
 
         public void AddLogEntry(LogEntry entry)
         {
@@ -21,14 +22,9 @@ namespace TimeTracker.Model
 
             if(null != entry.Month)
             {
-                LogAggregation month;
                 var key = entry.Month.Value.ToString(CultureInfo.InvariantCulture.NumberFormat);
-                if(Months.ContainsKey(key))
-                {
-                    month = Months[key];
-                }
-                else
-                {
+                if (!Months.TryGetValue(key, out LogAggregation? month))
+                {                    
                     month = new LogAggregation();
                     Months.Add(key, month);
                 }
@@ -37,18 +33,23 @@ namespace TimeTracker.Model
 
             if (null != entry.Week)
             {
-                LogAggregation week;
                 var key = entry.Week.Value.ToString(CultureInfo.InvariantCulture.NumberFormat);
-                if(Weeks.ContainsKey(key))
-                {
-                    week = Weeks[key];
-                } 
-                else
-                {
+                if (!Weeks.TryGetValue(key, out LogAggregation? week))
+                {                    
                     week = new LogAggregation();
                     Weeks.Add(key, week);
                 }                
                 week.AddLogEntry(entry);
+            }
+
+            if(null != entry.Date)
+            {
+                if (!Days.TryGetValue(entry.Date, out WorkingDayAggregation? day))
+                {
+                    day = new WorkingDayAggregation();
+                    Days.Add(entry.Date, day);
+                }
+                day.AddLogEntry(entry);
             }
         }
 
@@ -78,6 +79,18 @@ namespace TimeTracker.Model
                     if (week.IsEmpty())
                     {
                         Weeks.Remove(key);
+                    }
+                }                
+            }
+
+            if (null != entry.Date)
+            {
+                if (Days.TryGetValue(entry.Date, out WorkingDayAggregation? day))
+                {
+                    day.RemoveLogEntry(entry);
+                    if (day.IsEmpty())
+                    {
+                        Days.Remove(entry.Date);
                     }
                 }                
             }

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
 using System.Configuration;
+using System.Globalization;
 using TimeTracker.Model;
 
 namespace TimeTracker.Service
@@ -11,6 +13,7 @@ namespace TimeTracker.Service
         public Task<LogAggregationByYear> DeleteLogEntry(LogEntry entry);
         public Task<LogAggregationByYear?> GetByYear(string year);
         public Task<LogAggregationByYear> UpdateLogEntry(LogEntry oldValue, LogEntry newValue);
+        public Task<LogAggregationByYear> RecalculateForYear(Collection<LogEntry> logEntries, string year);
     }
 
     sealed internal class StatisticsService : IStatisticsService, IDisposable
@@ -176,6 +179,40 @@ namespace TimeTracker.Service
             }                                                
         }
 
+        public async Task<LogAggregationByYear> RecalculateForYear(Collection<LogEntry> logEntries, string year)
+        {
+            if (!await Initialize())
+            {
+                _logger.LogInitializationFailure();
+                throw new IOException("Failed to initialize DB connection");
+            }
+
+            var key = $"00000000-0000-0000-0000-00000000{year}";
+            try
+            {
+                await container!.DeleteItemAsync<LogAggregationByYear>(key, new PartitionKey(key));
+                _logger.LogStatisticsDeletedForYear(year);                
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // That's OK.
+            }
+
+            var newLogAggregation = new LogAggregationByYear
+            {
+                Id = key,
+                PartitionKey = key
+            };
+            foreach(LogEntry entry in logEntries)
+            {
+                newLogAggregation.AddLogEntry(entry);
+            }
+
+            var response = await container!.CreateItemAsync(newLogAggregation, new PartitionKey(key));
+            _logger.LogStatisticsCreatedForYear(int.Parse(year, NumberFormatInfo.InvariantInfo));
+            return response.Resource;
+        }
+
         public void Dispose()
         {
             this.cosmosClient?.Dispose();
@@ -186,6 +223,7 @@ namespace TimeTracker.Service
     {
         private static readonly Action<ILogger, Exception?> _connectionStringNotSet;
         private static readonly Action<ILogger, string, Exception?> _createdStatisticsForYear;
+        private static readonly Action<ILogger, string, Exception?> _deletedStatisticsForYear;
         private static readonly Action<ILogger, Exception?> _initializationFailure;
         private static readonly Action<ILogger, string, Exception?> _noStatisticsForYear;
         private static readonly Action<ILogger, string, Exception?> _readStatisticsForYear;
@@ -201,6 +239,10 @@ namespace TimeTracker.Service
                 logLevel: LogLevel.Information,
                 eventId: 9,
                 formatString: "Inserted new statistics for {Year}.");
+            _deletedStatisticsForYear = LoggerMessage.Define<string>(
+                logLevel: LogLevel.Information,
+                eventId: 13,
+                formatString: "Deleted statistics for {Year}.");
             _initializationFailure = LoggerMessage.Define(
                 logLevel: LogLevel.Critical,
                 eventId: 7,
@@ -256,6 +298,11 @@ namespace TimeTracker.Service
             {
                 _createdStatisticsForYear(logger, year.ToString()!, null);
             }
+        }
+
+        public static void LogStatisticsDeletedForYear(this ILogger logger, string year)
+        {
+            _deletedStatisticsForYear(logger, year, null);
         }
 
         public static void LogStatisticsReadForYear(this ILogger logger, string year)

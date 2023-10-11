@@ -37,10 +37,8 @@ namespace TimeTracker.Functions.LogEntries
                 await response.WriteAsJsonAsync(result);
                 return response;
             }
-            else
-            {
-                return req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
-            }
+            
+            return req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
         }
     }
 

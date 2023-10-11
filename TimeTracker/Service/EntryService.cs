@@ -12,6 +12,7 @@ namespace TimeTracker.Service
         public Task<bool> DeleteLogEntry(string id);
         public Task<LogEntry> UpdateLogEntry(LogEntry entry);
         public Task<Collection<LogEntry>> GetLogEntriesByDate(string dateStr);
+        public Task<Collection<LogEntry>> GetLogEntriesByYear(int year);
     }
 
     sealed internal class EntryService : IEntryService, IDisposable
@@ -127,6 +128,28 @@ namespace TimeTracker.Service
             while (queryResultSetIterator.HasMoreResults)
             {
                 var currentResultSet = await queryResultSetIterator.ReadNextAsync();                
+                foreach (LogEntry entry in currentResultSet)
+                {
+                    result.Add(entry);
+                }
+            }
+            return result;
+        }
+
+        public async Task<Collection<LogEntry>> GetLogEntriesByYear(int year)
+        {
+            if (!await Initialize())
+            {
+                _logger.LogInitializationFailure();
+                throw new IOException("Failed to initialize DB connection");
+            }            
+
+            var sqlQueryText = $"SELECT* FROM c WHERE c.Year = {year}";
+            var queryResultSetIterator = container!.GetItemQueryIterator<LogEntry>(new QueryDefinition(sqlQueryText));
+            var result = new Collection<LogEntry>();
+            while (queryResultSetIterator.HasMoreResults)
+            {
+                var currentResultSet = await queryResultSetIterator.ReadNextAsync();
                 foreach (LogEntry entry in currentResultSet)
                 {
                     result.Add(entry);

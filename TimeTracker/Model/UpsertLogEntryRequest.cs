@@ -102,7 +102,7 @@ namespace TimeTracker.Model
             
         }
 
-        [GeneratedRegex("\\d{4}-\\d{1,2}\\d{1,2}")]
+        [GeneratedRegex("\\d{4}-\\d{1,2}-\\d{1,2}")]
         private static partial Regex DateRegEx();
 
         [GeneratedRegex("(\\d{1,2}):(\\d{0,2})")]

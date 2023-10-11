@@ -30,19 +30,15 @@ namespace TimeTracker.Functions
                 return req.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-
-            var response = req.CreateResponse();
             var result = await _statisticsService.GetByYear(year);
-
             if(null == result)
             {
                 return req.CreateResponse(HttpStatusCode.NotFound);
             } 
-            else
-            {
-                await response.WriteAsJsonAsync(result);
-                return response;
-            }            
+            
+            var response = req.CreateResponse();
+            await response.WriteAsJsonAsync(result);
+            return response;
         }
 
         [GeneratedRegex("\\d{4}")]

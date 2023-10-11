@@ -34,7 +34,7 @@ namespace TimeTracker.Functions.LogEntries
             return response;
         }
 
-        [GeneratedRegex("\\d{4}-\\d{1,2}\\d{1,2}", RegexOptions.IgnoreCase, "de-DE")]
+        [GeneratedRegex("\\d{4}-\\d{2}-\\d{2}", RegexOptions.IgnoreCase, "de-DE")]
         private static partial Regex DateRegEx();
     }
 
