@@ -3,7 +3,7 @@ param(
      [string]$BaseUrl
  )
 
-$appUrl = "${BaseUrl}/api/statistics/2023"
+$appUrl = "${BaseUrl}/api/absences/2023-10-16/2023-10-22"
 try {
 	$result = Invoke-WebRequest $appUrl -Method GET
 	Write-Host "GetStatisticsForYear: Success" -ForegroundColor Green

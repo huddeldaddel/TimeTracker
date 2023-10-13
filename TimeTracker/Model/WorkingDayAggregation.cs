@@ -2,10 +2,7 @@
 {
     public class WorkingDayAggregation
     {
-        public int Duration { get; set; }
-        public VacationType Vacation { get; set; }
-        public bool SickLeave { get; set; }
-        public bool HomeOffice { get; set; }
+        public int Duration { get; set; }        
 
         public void AddLogEntry(LogEntry entry)
         {
@@ -24,7 +21,7 @@
         }
         public bool IsEmpty()
         {
-            return (Duration == 0) && Vacation == VacationType.None && !SickLeave && !HomeOffice;
+            return Duration == 0;
         }
     }
 }

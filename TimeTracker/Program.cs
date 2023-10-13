@@ -6,6 +6,7 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices((services) =>
     {
+        services.Add(new ServiceDescriptor(typeof(IAbsenceService), typeof(AbsenceService), ServiceLifetime.Singleton));
         services.Add(new ServiceDescriptor(typeof(IEntryService), typeof(EntryService), ServiceLifetime.Singleton));
         services.Add(new ServiceDescriptor(typeof(IStatisticsService), typeof(StatisticsService), ServiceLifetime.Singleton));
     })

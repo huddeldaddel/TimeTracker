@@ -1,9 +1,9 @@
-using System.Globalization;
-using System.Net;
-using System.Text.RegularExpressions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
+using System.Net;
+using System.Text.RegularExpressions;
 using TimeTracker.Model;
 using TimeTracker.Service;
 
@@ -12,12 +12,12 @@ namespace TimeTracker.Functions.Absences
     public partial class GetAbsencesForDateRangeFunction
     {
         private readonly ILogger _logger;
-        private readonly IStatisticsService _statisticsService;
+        private readonly IAbsenceService _absenceService;
 
-        public GetAbsencesForDateRangeFunction(ILoggerFactory loggerFactory, IStatisticsService statisticsService)
+        public GetAbsencesForDateRangeFunction(ILoggerFactory loggerFactory, IAbsenceService absenceService)
         {
             _logger = loggerFactory.CreateLogger<GetAbsencesForDateRangeFunction>();
-            _statisticsService = statisticsService;
+            _absenceService = absenceService;
         }
 
         [Function("GetAbsencesForDateRangeFunction")]
@@ -37,27 +37,18 @@ namespace TimeTracker.Functions.Absences
                 return req.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            var result = new Dictionary<string, Absence>();
-
-            var year = fromDateTime.Year;
-            var statistics = await _statisticsService.GetByYear(year.ToString(CultureInfo.InvariantCulture.NumberFormat));
+            var dates = new List<string>();
             while (DateTime.Compare(fromDateTime, toDateTime) <= 0)
             {
-                if (null != statistics)
-                {
-                    var dateString = fromDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                    if (statistics.Days.TryGetValue(dateString, out WorkingDayAggregation? workingDayAggregation))
-                    {
-                        result.Add(dateString, new Absence(workingDayAggregation));
-                    }
-                }
+                var dateString = fromDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                dates.Add(dateString);
+                fromDateTime = fromDateTime.AddDays(1);                
+            }
 
-                fromDateTime.AddDays(1);
-                if((year != fromDateTime.Year) && (DateTime.Compare(fromDateTime, toDateTime) <= 0))
-                {
-                    year = fromDateTime.Year;
-                    statistics = await _statisticsService.GetByYear(year.ToString(CultureInfo.InvariantCulture.NumberFormat));
-                }
+            var result = new Dictionary<string, Absence>();
+            foreach(var absence in await _absenceService.GetAbsenceByDates(dates))
+            {
+                result.Add(absence.Date!, absence);
             }
 
             var response = req.CreateResponse();
