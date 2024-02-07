@@ -4,7 +4,7 @@
       "commandName": "Project",
       "commandLineArgs": "--port 7010",
       "environmentVariables": {
-        "COSMOS_CONNECTION_STRING": "AccountEndpoint=https://twtimertrackerappdb.documents.azure.com:443/;AccountKey=fNCE86cuoCyJ53RWiFafZBa1K279eMM8n1Q2ZWktNoFsPUocuYn0vtUroBSbj9eeEb9pkF3Ul5CMACDbJkt3ig=="
+        "COSMOS_CONNECTION_STRING": "Put CosmosDB connection string here"
       }
     },
     "Docker": {
