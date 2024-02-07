@@ -2,7 +2,10 @@
   "profiles": {
     "TimeTracker": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7010"
+      "commandLineArgs": "--port 7010",
+      "environmentVariables": {
+        "COSMOS_CONNECTION_STRING": "Put CosmosDB connection string here"
+      }
     },
     "Docker": {
       "commandName": "Docker",

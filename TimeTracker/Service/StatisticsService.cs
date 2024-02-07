@@ -283,8 +283,8 @@ namespace TimeTracker.Service
                 _noStatisticsForYear(logger, "", null);
             }
             else
-            {
-                _noStatisticsForYear(logger, year.ToString()!, null);
+            {                
+                _noStatisticsForYear(logger, year.Value.ToString(CultureInfo.InvariantCulture), null);
             }            
         }
 
@@ -296,7 +296,7 @@ namespace TimeTracker.Service
             }
             else
             {
-                _createdStatisticsForYear(logger, year.ToString()!, null);
+                _createdStatisticsForYear(logger, year.Value.ToString(CultureInfo.InvariantCulture), null);
             }
         }
 
@@ -318,7 +318,7 @@ namespace TimeTracker.Service
             }
             else
             {
-                _readStatisticsForYear(logger, year.ToString()!, null);
+                _readStatisticsForYear(logger, year.Value.ToString(CultureInfo.InvariantCulture), null);
             }
         }
 
@@ -330,7 +330,7 @@ namespace TimeTracker.Service
             }
             else
             {
-                _updatedStatisticsForYear(logger, year.ToString()!, null);
+                _updatedStatisticsForYear(logger, year.Value.ToString(CultureInfo.InvariantCulture), null);
             }
         }
     }
