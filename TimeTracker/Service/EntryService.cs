@@ -13,6 +13,7 @@ namespace TimeTracker.Service
         public Task<LogEntry> UpdateLogEntry(LogEntry entry);
         public Task<Collection<LogEntry>> GetLogEntriesByDate(string dateStr);
         public Task<Collection<LogEntry>> GetLogEntriesByYear(int year);
+        public Task<Collection<LogEntry>> FindLogEntriesByYearAndProject(int year, string? project, string? query);
     }
 
     sealed internal class EntryService : IEntryService, IDisposable
@@ -146,6 +147,47 @@ namespace TimeTracker.Service
 
             var sqlQueryText = $"SELECT* FROM c WHERE c.Year = {year}";
             var queryResultSetIterator = container!.GetItemQueryIterator<LogEntry>(new QueryDefinition(sqlQueryText));
+            var result = new Collection<LogEntry>();
+            while (queryResultSetIterator.HasMoreResults)
+            {
+                var currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                foreach (LogEntry entry in currentResultSet)
+                {
+                    result.Add(entry);
+                }
+            }
+            return result;
+        }
+
+        public async Task<Collection<LogEntry>> FindLogEntriesByYearAndProject(int year, string? project, string? query)
+        {
+            if (!await Initialize())
+            {
+                _logger.LogInitializationFailure();
+                throw new IOException("Failed to initialize DB connection");
+            }
+
+            var sqlQueryText = $"SELECT* FROM c WHERE c.Year = @year";
+            if(null != project)
+            {
+                sqlQueryText += $" AND c.Project = @project";
+            }
+            if(null != query)
+            {
+                sqlQueryText += $" AND c.Description LIKE @query";
+            }
+
+            var queryDefinition = new QueryDefinition(sqlQueryText).WithParameter("@year", year);
+            if(null != project)
+            {
+                queryDefinition = queryDefinition.WithParameter("@project", project);
+            }
+            if (null != query)
+            {
+                queryDefinition = queryDefinition.WithParameter("@query", query.Replace("*", "%"));
+            }
+
+            var queryResultSetIterator = container!.GetItemQueryIterator<LogEntry>(queryDefinition);
             var result = new Collection<LogEntry>();
             while (queryResultSetIterator.HasMoreResults)
             {
