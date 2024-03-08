@@ -9,6 +9,9 @@ namespace TimeTracker.Functions.LogEntries
 {
     public partial class GetLogEntriesForDateFunction
     {
+        private static readonly Action<ILogger, string, Exception?> _getLogEntriesForDateFunctionExecuting = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Debug, eventId: 6, formatString: "GetLogEntriesForDateFunction is processing a HTTP trigger for date {Date}");
+
         private readonly ILogger _logger;
         private readonly IEntryService _entryService;
 
@@ -21,7 +24,7 @@ namespace TimeTracker.Functions.LogEntries
         [Function("GetLogEntriesForDate")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "get", Route = "logEntries/{date}")] HttpRequestData req, string date)
         {
-            _logger.GetLogEntriesForDateFunctionExecuting(date);
+            _getLogEntriesForDateFunctionExecuting.Invoke(_logger, date, null);
             
             if(!DateRegEx().Match(date).Success)
             {
@@ -36,23 +39,5 @@ namespace TimeTracker.Functions.LogEntries
 
         [GeneratedRegex("\\d{4}-\\d{2}-\\d{2}", RegexOptions.IgnoreCase, "de-DE")]
         private static partial Regex DateRegEx();
-    }
-
-    internal static class GetLogEntriesForDateLoggerExtensions
-    {
-        private static readonly Action<ILogger, string, Exception?> _getLogEntriesForDateFunctionExecuting;
-
-        static GetLogEntriesForDateLoggerExtensions()
-        {
-            _getLogEntriesForDateFunctionExecuting = LoggerMessage.Define<string>(
-                 logLevel: LogLevel.Debug,
-                 eventId: 6,
-                 formatString: "GetLogEntriesForDateFunction is processing a HTTP trigger for date {Date}");
-        }
-
-        public static void GetLogEntriesForDateFunctionExecuting(this ILogger logger, string date)
-        {
-            _getLogEntriesForDateFunctionExecuting(logger, date, null);
-        }
     }
 }

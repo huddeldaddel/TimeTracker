@@ -1,6 +1,5 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TimeTracker.Model;
 using TimeTracker.Service;
@@ -8,13 +7,11 @@ using TimeTracker.Service;
 namespace TimeTracker.Functions.Absences
 {
     public class UpdateAbsenceFunction
-    {
-        private readonly ILogger _logger;
+    {        
         private readonly IAbsenceService _absenceService;
 
-        public UpdateAbsenceFunction(ILoggerFactory loggerFactory, IAbsenceService absenceService)
-        {
-            _logger = loggerFactory.CreateLogger<UpdateAbsenceFunction>();
+        public UpdateAbsenceFunction(IAbsenceService absenceService)
+        {            
             _absenceService = absenceService;
         }
 

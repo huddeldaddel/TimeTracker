@@ -64,7 +64,7 @@ namespace TimeTracker.Service
 
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.AddLogEntry(entry);
-                response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
+                await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
                 _logger.LogStatisticsUpdatedForYear(entry.Year);
                 return updatedLogAggregation;
             }
@@ -100,7 +100,7 @@ namespace TimeTracker.Service
 
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.RemoveLogEntry(entry);
-                response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
+                await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
                 _logger.LogStatisticsUpdatedForYear(entry.Year);
                 return updatedLogAggregation;
             } 
@@ -157,7 +157,7 @@ namespace TimeTracker.Service
                 var updatedLogAggregation = response.Resource;
                 updatedLogAggregation.RemoveLogEntry(oldValue);
                 updatedLogAggregation.AddLogEntry(newValue);
-                response = await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
+                await container!.ReplaceItemAsync(updatedLogAggregation, key, new PartitionKey(key));
                 _logger.LogStatisticsUpdatedForYear(newValue.Year);
                 return updatedLogAggregation;
             }
@@ -221,45 +221,26 @@ namespace TimeTracker.Service
 
     internal static class StatisticsServiceLoggerExtensions
     {
-        private static readonly Action<ILogger, Exception?> _connectionStringNotSet;
-        private static readonly Action<ILogger, string, Exception?> _createdStatisticsForYear;
-        private static readonly Action<ILogger, string, Exception?> _deletedStatisticsForYear;
-        private static readonly Action<ILogger, Exception?> _initializationFailure;
-        private static readonly Action<ILogger, string, Exception?> _noStatisticsForYear;
-        private static readonly Action<ILogger, string, Exception?> _readStatisticsForYear;
-        private static readonly Action<ILogger, string, Exception?> _updatedStatisticsForYear;
+        private static readonly Action<ILogger, Exception?> _connectionStringNotSet = LoggerMessage
+            .Define(logLevel: LogLevel.Critical, eventId: 12, formatString: "COSMOS_CONNECTION_STRING not specified!");
 
-        static StatisticsServiceLoggerExtensions()
-        {
-            _connectionStringNotSet = LoggerMessage.Define(
-                logLevel: LogLevel.Critical,
-                eventId: 12,
-                formatString: "COSMOS_CONNECTION_STRING not specified!");
-            _createdStatisticsForYear = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 9,
-                formatString: "Inserted new statistics for {Year}.");
-            _deletedStatisticsForYear = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 13,
-                formatString: "Deleted statistics for {Year}.");
-            _initializationFailure = LoggerMessage.Define(
-                logLevel: LogLevel.Critical,
-                eventId: 7,
-                formatString: "Failed to initialize DB connection");
-            _noStatisticsForYear = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 8,
-                formatString: "Failed to find statistics for {Year}.");
-            _readStatisticsForYear = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 10,
-                formatString: "Found to statistics for {Year}.");
-            _updatedStatisticsForYear = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 11,
-                formatString: "Updated statistics for {Year}.");
-        }
+        private static readonly Action<ILogger, string, Exception?> _createdStatisticsForYear = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 9, formatString: "Inserted new statistics for {Year}.");
+
+        private static readonly Action<ILogger, string, Exception?> _deletedStatisticsForYear = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 13, formatString: "Deleted statistics for {Year}.");
+
+        private static readonly Action<ILogger, Exception?> _initializationFailure = LoggerMessage
+            .Define(logLevel: LogLevel.Critical, eventId: 7, formatString: "Failed to initialize DB connection");
+
+        private static readonly Action<ILogger, string, Exception?> _noStatisticsForYear = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 8, formatString: "Failed to find statistics for {Year}.");
+
+        private static readonly Action<ILogger, string, Exception?> _readStatisticsForYear = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 10, formatString: "Found to statistics for {Year}.");
+
+        private static readonly Action<ILogger, string, Exception?> _updatedStatisticsForYear = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 11, formatString: "Updated statistics for {Year}.");        
 
         public static void LogConnectionStringNotSet(this ILogger logger)
         {
