@@ -1,3 +1,5 @@
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=huddeldaddel_TimeTracker&metric=bugs)](https://sonarcloud.io/summary/new_code?id=huddeldaddel_TimeTracker) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=huddeldaddel_TimeTracker&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=huddeldaddel_TimeTracker) [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=huddeldaddel_TimeTracker&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=huddeldaddel_TimeTracker) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=huddeldaddel_TimeTracker&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=huddeldaddel_TimeTracker) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=huddeldaddel_TimeTracker&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=huddeldaddel_TimeTracker)
+
 # TimeTracker
 
-
+Serverless backend for [TimeTrackerUI](https://github.com/huddeldaddel/TimeTrackerUI). Based on C#, Azure Functions and CosmosDB.
