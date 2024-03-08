@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using TimeTracker.Exceptions;
 using TimeTracker.Model;
 
 namespace TimeTracker.Service
@@ -65,7 +66,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
                             
             entry.Id = Guid.NewGuid().ToString();
@@ -82,7 +83,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(id, new PartitionKey(id));
@@ -103,7 +104,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(entry.Id, new PartitionKey(entry.Id));
@@ -123,7 +124,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             if(!UpsertLogEntryRequest.ValidateDate(dateStr))
@@ -150,7 +151,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }            
 
             var sqlQueryText = $"SELECT* FROM c WHERE c.Year = {year}";
@@ -172,7 +173,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var sqlQueryText = $"SELECT* FROM c WHERE c.Year = @year";

@@ -83,16 +83,13 @@ namespace TimeTracker.Model
                 }                
             }
 
-            if (null != entry.Date)
+            if (null != entry.Date && Days.TryGetValue(entry.Date, out WorkingDayAggregation? day))
             {
-                if (Days.TryGetValue(entry.Date, out WorkingDayAggregation? day))
+                day.RemoveLogEntry(entry);
+                if (day.IsEmpty())
                 {
-                    day.RemoveLogEntry(entry);
-                    if (day.IsEmpty())
-                    {
-                        Days.Remove(entry.Date);
-                    }
-                }                
+                    Days.Remove(entry.Date);
+                }
             }
         }
     }

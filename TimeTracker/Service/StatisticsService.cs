@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Globalization;
+using TimeTracker.Exceptions;
 using TimeTracker.Model;
 
 namespace TimeTracker.Service
@@ -53,7 +54,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var key = $"00000000-0000-0000-0000-00000000{entry.Year}";
@@ -89,7 +90,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var key = $"00000000-0000-0000-0000-00000000{entry.Year}";
@@ -116,7 +117,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var key = $"00000000-0000-0000-0000-00000000{year}";
@@ -139,7 +140,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             if(oldValue.Year != newValue.Year)
@@ -184,7 +185,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var key = $"00000000-0000-0000-0000-00000000{year}";

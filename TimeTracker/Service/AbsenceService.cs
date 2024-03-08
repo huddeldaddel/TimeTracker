@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Configuration;
 using System.Globalization;
+using TimeTracker.Exceptions;
 using TimeTracker.Model;
 
 namespace TimeTracker.Service
@@ -52,7 +53,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var keys = new List<(string, PartitionKey)>();                        
@@ -95,7 +96,7 @@ namespace TimeTracker.Service
             if (!await Initialize())
             {
                 _logger.LogInitializationFailure();
-                throw new IOException("Failed to initialize DB connection");
+                throw new DbInitializationFailedException();
             }
 
             var formattedDate = absence.Date?.Replace("-", "");
