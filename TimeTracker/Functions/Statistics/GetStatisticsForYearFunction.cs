@@ -9,6 +9,9 @@ namespace TimeTracker.Functions
 {
     public partial class GetStatisticsForYearFunction
     {
+        private static readonly Action<ILogger, string, Exception?> _getStatisticsForYearFunctionExecuting = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Debug, eventId: 2, formatString: "GetStatisticsForYearFunction is processing a HTTP trigger for year {Year}");
+
         private readonly ILogger _logger;
         private readonly IStatisticsService _statisticsService;
 
@@ -21,7 +24,7 @@ namespace TimeTracker.Functions
         [Function("GetStatisticsForYear")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "get", Route = "statistics/{year}")] HttpRequestData req, string year)
         {
-            _logger.GetStatisticsForYearFunctionExecuting(year);
+            _getStatisticsForYearFunctionExecuting.Invoke(_logger, year, null);
 
             Regex rgx = YearRegEx();
             Match match = rgx.Match(year);
@@ -43,23 +46,5 @@ namespace TimeTracker.Functions
 
         [GeneratedRegex("\\d{4}")]
         private static partial Regex YearRegEx();
-    }
-
-    internal static class GetStatisticsForYearLoggerExtensions
-    {
-        private static readonly Action<ILogger, string, Exception?> _getStatisticsForYearFunctionExecuting;
-
-        static GetStatisticsForYearLoggerExtensions()
-        {
-            _getStatisticsForYearFunctionExecuting = LoggerMessage.Define<string>(
-                 logLevel: LogLevel.Debug,
-                 eventId: 2,
-                 formatString: "GetStatisticsForYearFunction is processing a HTTP trigger for year {Year}");
-        }
-
-        public static void GetStatisticsForYearFunctionExecuting(this ILogger logger, string year)
-        {
-            _getStatisticsForYearFunctionExecuting(logger, year, null);
-        }
     }
 }

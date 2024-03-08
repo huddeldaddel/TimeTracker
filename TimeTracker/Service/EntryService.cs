@@ -17,7 +17,16 @@ namespace TimeTracker.Service
     }
 
     sealed internal class EntryService : IEntryService, IDisposable
-    {        
+    {
+        private static readonly Action<ILogger, string, Exception?> _createdLogEntry = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 14, formatString: "Inserted log entry {Id} into database.");
+        private static readonly Action<ILogger, string, Exception?> _deletedLogEntry = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 14, formatString: "Deleted log entry {Id} from database.");
+        private static readonly Action<ILogger, string, Exception?> _readLogEntry = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 15, formatString: "Found log entry {Id} in database.");
+        private static readonly Action<ILogger, string, Exception?> _updatedLogEntry = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 13, formatString: "Updated log entry {Id} in database.");
+
         private readonly CosmosClient cosmosClient;
         private readonly ILogger _logger;
         private readonly IStatisticsService _statisticsService;
@@ -62,7 +71,7 @@ namespace TimeTracker.Service
             entry.Id = Guid.NewGuid().ToString();
             entry.PartitionKey = entry.Id;
             var response = await container!.CreateItemAsync(entry, new PartitionKey(entry.PartitionKey));
-            _logger.LogLogEntryCreated(response.Resource.Id);
+            _createdLogEntry(_logger, response.Resource.Id ?? "", null);
 
             await _statisticsService.AddLogEntry(entry);
             return response.Resource;
@@ -77,13 +86,12 @@ namespace TimeTracker.Service
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(id, new PartitionKey(id));
-            _logger.LogReadLogEntry(id);
+            _readLogEntry(_logger, id ?? string.Empty, null);
             if (response.Resource != null)
             {
-                await _statisticsService.DeleteLogEntry(response.Resource);
-
+                await _statisticsService.DeleteLogEntry(response.Resource);                
                 await container!.DeleteItemAsync<LogEntry>(id, new PartitionKey(id));
-                _logger.LogDeletedLogEntry(id);
+                _deletedLogEntry(_logger, id ?? string.Empty, null);                
                 return true;
             }
 
@@ -99,18 +107,18 @@ namespace TimeTracker.Service
             }
 
             var response = await container!.ReadItemAsync<LogEntry>(entry.Id, new PartitionKey(entry.Id));
-            _logger.LogReadLogEntry(entry.Id);
+            _readLogEntry(_logger, entry.Id ?? string.Empty, null);            
             if (response.Resource != null)
             {
                 await _statisticsService.UpdateLogEntry(response.Resource, entry);
             }
 
             response = await container!.ReplaceItemAsync(entry, entry.Id, new PartitionKey(entry.PartitionKey));
-            _logger.LogLogEntryUpdated(response.Resource.Id);
+            _updatedLogEntry(_logger, response.Resource.Id ?? "", null);            
             return response.Resource;
         }
 
-        public async Task<Collection<LogEntry>> GetLogEntriesByDate(string date)
+        public async Task<Collection<LogEntry>> GetLogEntriesByDate(string dateStr)
         {
             if (!await Initialize())
             {
@@ -118,12 +126,12 @@ namespace TimeTracker.Service
                 throw new IOException("Failed to initialize DB connection");
             }
 
-            if(!UpsertLogEntryRequest.ValidateDate(date))
+            if(!UpsertLogEntryRequest.ValidateDate(dateStr))
             {
                 throw new ArgumentException("Date should be specified as yyyy-MM-dd");
             }
 
-            var sqlQueryText = $"SELECT* FROM c WHERE c.Date = '{date}'";            
+            var sqlQueryText = $"SELECT* FROM c WHERE c.Date = '{dateStr}'";            
             var queryResultSetIterator = container!.GetItemQueryIterator<LogEntry>(new QueryDefinition(sqlQueryText));
             var result = new Collection<LogEntry>();
             while (queryResultSetIterator.HasMoreResults)
@@ -203,55 +211,6 @@ namespace TimeTracker.Service
         public void Dispose()
         {
             this.cosmosClient.Dispose();
-        }
-    }
-
-    internal static class EntryServiceLoggerExtensions
-    {
-        
-        private static readonly Action<ILogger, string, Exception?> _createdLogEntry;        
-        private static readonly Action<ILogger, string, Exception?> _deletedLogEntry;
-        private static readonly Action<ILogger, string, Exception?> _readLogEntry;
-        private static readonly Action<ILogger, string, Exception?> _updatedLogEntry;
-
-        static EntryServiceLoggerExtensions()
-        {
-            _createdLogEntry = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 14,
-                formatString: "Inserted log entry {Id} into database.");
-            _deletedLogEntry = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 14,
-                formatString: "Deleted log entry {Id} from database.");
-            _readLogEntry = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 15,
-                formatString: "Found log entry {Id} in database.");
-            _updatedLogEntry = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Information,
-                eventId: 13,
-                formatString: "Updated log entry {Id} in database.");
-        }                       
-
-        public static void LogDeletedLogEntry(this ILogger logger, string? id)
-        {
-            _deletedLogEntry(logger, id ?? "", null);
-        }
-
-        public static void LogLogEntryCreated(this ILogger logger, string? id)
-        {
-            _createdLogEntry(logger, id ?? "", null);
-        }
-
-        public static void LogReadLogEntry(this ILogger logger, string? id)
-        {
-            _readLogEntry(logger, id ?? "", null);
-        }
-     
-        public static void LogLogEntryUpdated(this ILogger logger, string? id)
-        {
-            _updatedLogEntry(logger, id ?? "", null);
         }
     }
 }

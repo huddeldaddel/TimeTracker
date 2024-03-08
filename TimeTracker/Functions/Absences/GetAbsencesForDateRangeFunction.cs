@@ -11,6 +11,9 @@ namespace TimeTracker.Functions.Absences
 {
     public partial class GetAbsencesForDateRangeFunction
     {
+        private static readonly Action<ILogger, string, string, Exception?> _getAbsencesForDateRangeFunctionExecuting = LoggerMessage
+            .Define<string, string>(logLevel: LogLevel.Debug, eventId: 1, formatString: "GetAbsencesForDateRangeFunction is processing a HTTP trigger for date range from {From} to {To}");
+
         private readonly ILogger _logger;
         private readonly IAbsenceService _absenceService;
 
@@ -23,7 +26,7 @@ namespace TimeTracker.Functions.Absences
         [Function("GetAbsencesForDateRangeFunction")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "get", Route = "absences/{from}/{to}")] HttpRequestData req, string from, string to)
         {
-            _logger.GetAbsencesForDateRangeFunctionExecuting(from, to);
+            _getAbsencesForDateRangeFunctionExecuting.Invoke(_logger, from, to, null);
             
             if (! (GetDateRegEx().Match(from).Success && GetDateRegEx().Match(to).Success))
             {
@@ -58,23 +61,5 @@ namespace TimeTracker.Functions.Absences
 
         [GeneratedRegex("\\d{4}-\\d{2}-\\d{2}")]
         private static partial Regex GetDateRegEx();
-    }
-
-    internal static class GetAbsencesForDateRangeLoggerExtensions
-    {
-        private static readonly Action<ILogger, string, string, Exception?> _getAbsencesForDateRangeFunctionExecuting;
-
-        static GetAbsencesForDateRangeLoggerExtensions()
-        {
-            _getAbsencesForDateRangeFunctionExecuting = LoggerMessage.Define<string, string>(
-                 logLevel: LogLevel.Debug,
-                 eventId: 1,
-                 formatString: "GetAbsencesForDateRangeFunction is processing a HTTP trigger for date range from {From} to {To}");
-        }
-
-        public static void GetAbsencesForDateRangeFunctionExecuting(this ILogger logger, string from, string to)
-        {
-            _getAbsencesForDateRangeFunctionExecuting(logger, from, to, null);
-        }
     }
 }

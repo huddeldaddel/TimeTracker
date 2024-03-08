@@ -9,6 +9,9 @@ namespace TimeTracker.Functions.LogEntries
 {
     public class FindLogEntiesForYearAndProject
     {
+        private static readonly Action<ILogger, string, Exception?> _searchFunctionExecuting = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Debug, eventId: 4, formatString: "SearchFunction is processing a HTTP trigger with body {Body}");
+
         private readonly ILogger<FindLogEntiesForYearAndProject> _logger;
         private readonly IEntryService _entryService;
 
@@ -28,7 +31,7 @@ namespace TimeTracker.Functions.LogEntries
             }
 
             var requestEntry = JsonConvert.DeserializeObject<SearchRequest>(requestBody);
-            _logger.SearchFunctionExecuting(requestBody);
+            _searchFunctionExecuting.Invoke(_logger, requestBody, null);
 
             if (null != requestEntry && requestEntry.Validate())
             {
@@ -41,24 +44,6 @@ namespace TimeTracker.Functions.LogEntries
             {
                 return req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
             }
-        }
-    }
-
-    internal static class SearchLoggerExtensions
-    {
-        private static readonly Action<ILogger, string, Exception?> _searchFunctionExecuting;
-
-        static SearchLoggerExtensions()
-        {
-            _searchFunctionExecuting = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Debug,
-                eventId: 4,
-                formatString: "SearchFunction is processing a HTTP trigger with body {Body}");
-        }
-
-        public static void SearchFunctionExecuting(this ILogger logger, string body)
-        {
-            _searchFunctionExecuting(logger, body, null);
         }
     }
 }

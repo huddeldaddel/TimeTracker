@@ -10,6 +10,9 @@ namespace TimeTracker.Functions.Statistics
 {
     public partial class RecalculateStatisticsForYearFunction
     {
+        private static readonly Action<ILogger, string, Exception?> _recalculateStatisticsForYearFunctionExecuting = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Debug, eventId: 2, formatString: "RecalculateStatisticsForYearFunction is processing a HTTP trigger for year {Year}");
+
         private readonly ILogger _logger;
         private readonly IEntryService _entryService;
         private readonly IStatisticsService _statisticsService;
@@ -24,7 +27,7 @@ namespace TimeTracker.Functions.Statistics
         [Function("RecalculateStatisticsForYear")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "post", Route = "statistics/{year}")] HttpRequestData req, string year)
         {
-            _logger.RecalculateStatisticsForYearFunctionExecuting(year);
+            _recalculateStatisticsForYearFunctionExecuting.Invoke(_logger, year, null);
 
             Regex regex = YearRegExp();
             Match match = regex.Match(year);
@@ -43,23 +46,5 @@ namespace TimeTracker.Functions.Statistics
 
         [GeneratedRegex("\\d{4}")]
         private static partial Regex YearRegExp();
-    }
-
-    internal static class RecalculateStatisticsForYearLoggerExtensions
-    {
-        private static readonly Action<ILogger, string, Exception?> _recalculateStatisticsForYearFunctionExecuting;
-
-        static RecalculateStatisticsForYearLoggerExtensions()
-        {
-            _recalculateStatisticsForYearFunctionExecuting = LoggerMessage.Define<string>(
-                 logLevel: LogLevel.Debug,
-                 eventId: 2,
-                 formatString: "RecalculateStatisticsForYearFunction is processing a HTTP trigger for year {Year}");
-        }
-
-        public static void RecalculateStatisticsForYearFunctionExecuting(this ILogger logger, string year)
-        {
-            _recalculateStatisticsForYearFunctionExecuting(logger, year, null);
-        }
     }
 }

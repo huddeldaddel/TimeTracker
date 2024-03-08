@@ -7,6 +7,9 @@ namespace TimeTracker.Functions.LogEntries
 {
     public class DeleteLogEntryFunction
     {
+        private static readonly Action<ILogger, string, Exception?> _deleteEntryFunctionExecuting = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Debug, eventId: 3, formatString: "DeleteLogEntryFunction is processing a HTTP trigger for ID {Id}");
+
         private readonly ILogger _logger;
         private readonly IEntryService _entryService;
 
@@ -19,7 +22,7 @@ namespace TimeTracker.Functions.LogEntries
         [Function("DeleteLogEntry")]
         public async Task<HttpResponseData> RunAsync([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "logEntries/{id}")] HttpRequestData req, string id)
         {
-            _logger.DeleteLogEntryFunctionExecuting(id);
+            _deleteEntryFunctionExecuting.Invoke(_logger, id, null);
             if (null != id && 36 == id.Length)
             {
                 var result = await _entryService.DeleteLogEntry(id);
@@ -29,24 +32,6 @@ namespace TimeTracker.Functions.LogEntries
             {
                 return req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
             }
-        }
-    }
-
-    internal static class DeleteLogEntryLoggerExtensions
-    {
-        private static readonly Action<ILogger, string, Exception?> _deleteEntryFunctionExecuting;
-
-        static DeleteLogEntryLoggerExtensions()
-        {
-            _deleteEntryFunctionExecuting = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Debug,
-                eventId: 3,
-                formatString: "DeleteLogEntryFunction is processing a HTTP trigger for ID {Id}");
-        }
-
-        public static void DeleteLogEntryFunctionExecuting(this ILogger logger, string id)
-        {
-            _deleteEntryFunctionExecuting(logger, id, null);
         }
     }
 }

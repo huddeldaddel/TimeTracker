@@ -14,6 +14,9 @@ namespace TimeTracker.Service
 
     sealed internal class AbsenceService : IAbsenceService, IDisposable
     {
+        private static readonly Action<ILogger, string, Exception?> _updatedAbsence = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Information, eventId: 13, formatString: "Updated absence entry {Id} in database.");
+
         private readonly CosmosClient cosmosClient;
         private readonly ILogger _logger;        
         private Database? database;
@@ -72,7 +75,7 @@ namespace TimeTracker.Service
 
             foreach(var date in dates)
             {
-                if(!result.Any((r) => r.Date == date))
+                if (!result.Exists((r) => r.Date == date))
                 {
                     var dateTime = DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
                     result.Add(new Absence()
@@ -98,7 +101,7 @@ namespace TimeTracker.Service
             var formattedDate = absence.Date?.Replace("-", "");
             var key = $"00000000-0000-0000-0000-0000{formattedDate}";            
             var response = await container!.UpsertItemAsync(absence, new PartitionKey(key));
-            _logger.LogLogEntryUpdated(response.Resource.Id);
+            _updatedAbsence.Invoke(_logger, response.Resource.Id ?? "", null);
             return response.Resource;
         }
 

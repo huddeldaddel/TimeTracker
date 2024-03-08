@@ -9,6 +9,9 @@ namespace TimeTracker.Functions.LogEntries
 {
     public class UpdateLogEntryFunction
     {
+        private static readonly Action<ILogger, string, Exception?> _updateEntryFunctionExecuting = LoggerMessage
+            .Define<string>(logLevel: LogLevel.Debug, eventId: 5, formatString: "UpdateLogEntryFunction is processing a HTTP trigger with body {Body}");
+
         private readonly ILogger _logger;
         private readonly IEntryService _entryService;
 
@@ -28,7 +31,7 @@ namespace TimeTracker.Functions.LogEntries
             }
 
             var requestEntry = JsonConvert.DeserializeObject<UpsertLogEntryRequest>(requestBody);
-            _logger.UpdateLogEntryFunctionExecuting(requestBody);
+            _updateEntryFunctionExecuting.Invoke(_logger, requestBody, null);
 
             if (null != requestEntry && requestEntry.Validate())
             {
@@ -39,24 +42,6 @@ namespace TimeTracker.Functions.LogEntries
             }
             
             return req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
-        }
-    }
-
-    internal static class UpdateLogEntryLoggerExtensions
-    {
-        private static readonly Action<ILogger, string, Exception?> _updateEntryFunctionExecuting;
-
-        static UpdateLogEntryLoggerExtensions()
-        {
-            _updateEntryFunctionExecuting = LoggerMessage.Define<string>(
-                logLevel: LogLevel.Debug,
-                eventId: 5,
-                formatString: "UpdateLogEntryFunction is processing a HTTP trigger with body {Body}");
-        }
-
-        public static void UpdateLogEntryFunctionExecuting(this ILogger logger, string body)
-        {
-            _updateEntryFunctionExecuting(logger, body, null);
         }
     }
 }
